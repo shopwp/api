@@ -1,4 +1,4 @@
-# ShopWP API Library
+# 💽 ShopWP API Library
 
 Front-end API library for ShopWP
 
