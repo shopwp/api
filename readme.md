@@ -1,6 +1,6 @@
 # 💽 ShopWP API Library
 
-Front-end API library for ShopWP
+Front-end API library for ShopWP.
 
 ## Install
 
