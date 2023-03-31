@@ -1,0 +1,28 @@
+{
+  "name": "@shopwp/api",
+  "version": "7.0.5",
+  "description": "Front-end API for ShopWP",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --config webpack.config.babel.js",
+    "tests": "jest --watch --maxWorkers=25%"
+  },
+  "author": "ShopWP",
+  "license": "GPL-2.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shopwp/api.git"
+  },
+  "keywords": [
+    "wordpres",
+    "shopify",
+    "ecommerce",
+    "woocommerce"
+  ],
+  "peerDependencies": {
+    "react": ">=15.0.1",
+    "react-dom": ">=15.0.1"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
