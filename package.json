@@ -1,6 +1,6 @@
 {
   "name": "@shopwp/api",
-  "version": "7.0.5",
+  "version": "7.0.6",
   "description": "Front-end API for ShopWP.",
   "main": "index.js",
   "scripts": {
