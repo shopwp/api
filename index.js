@@ -1,4 +1,4 @@
-export { fetchProducts, fetchProductsByCollections } from "./src/src/products"
+export { fetchProducts, fetchProductsByCollections } from "./src/products"
 export { fetchCollections } from "./src/collections"
 
 export {
