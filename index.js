@@ -77,6 +77,7 @@ export {
   syncExpire,
   syncRemoveImages,
   removeWebhooks,
+  connectWebhooks,
 } from "./src/internal/syncing"
 
 export { clearCache } from "./src/internal/tools"

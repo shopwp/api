@@ -1,5 +1,9 @@
 import { get, post } from "../request"
 
+function jsF(d) {
+  return wp.hooks.applyFilters("product.requestSettings", d)
+}
+
 function getAllTags() {
   return get("products/tags")
 }
@@ -14,13 +18,13 @@ function getAllTypes() {
 
 function getProducts(data) {
   return post("products", {
-    data: data,
+    data: jsF(data),
   })
 }
 
 function getProductsByCollections(data) {
   return post("products/collections", {
-    data: data,
+    data: jsF(data),
   })
 }
 
