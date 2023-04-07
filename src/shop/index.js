@@ -1,16 +1,7 @@
 import to from "await-to-js"
 import { maybeHandleApiError } from "../errors"
 import { getAvailableLocalizations } from "../internal/translator"
-
-function sanitizeLanguages(languages) {
-  if (!languages) {
-    return false
-  }
-
-  return languages.map((language) => {
-    return { label: language.name, value: language.isoCode }
-  })
-}
+import { sanitizeLanguages } from "@shopwp/common"
 
 function sanitizeCountries(countries) {
   if (!countries) {
@@ -112,7 +103,6 @@ async function getLocalizations(shopState, dispatch) {
 
 export {
   getLocalizations,
-  sanitizeLanguages,
   sanitizeTranslations,
   findCountryByCode,
   sanitizeCountries,

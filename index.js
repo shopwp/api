@@ -3,7 +3,6 @@ export { fetchCollections } from "./src/collections"
 
 export {
   getLocalizations,
-  sanitizeLanguages,
   sanitizeTranslations,
   findCountryByCode,
   sanitizeCountries,
