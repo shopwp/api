@@ -1,11 +1,11 @@
-import { get, post } from "../request"
+import { post } from "../request"
 
 function jsF(d) {
   return wp.hooks.applyFilters("cart.requestSettings", d)
 }
 
 function getCart(data) {
-  return get("cart/get?data=" + btoa(JSON.stringify(jsF(data))))
+  return post("cart/get", jsF(data))
 }
 
 function createCart(data) {
