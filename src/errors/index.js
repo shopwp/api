@@ -1,13 +1,12 @@
-import isString from "lodash/isString"
-import isError from "lodash/isError"
-import isArray from "lodash/isArray"
-import isObject from "lodash/isObject"
-import isEmpty from "lodash/isEmpty"
-import forEach from "lodash/forEach"
-import has from "lodash/has"
+import isError from "lodash-es/isError"
+import isArray from "lodash-es/isArray"
+import isObject from "lodash-es/isObject"
+import isEmpty from "lodash-es/isEmpty"
+
+const has = (d, p) => (d ? d.hasOwnProperty(p) : false)
 
 function findErrorMessage(maybeErrorMessage, shopState) {
-  if (isString(maybeErrorMessage)) {
+  if (typeof maybeErrorMessage === "string") {
     return maybeErrorMessage
   }
 
@@ -82,7 +81,7 @@ function isWordPressError(response) {
 
   // Used when using promise all for checking more than one returned response
   if (isArray(response) && !isEmpty(response)) {
-    forEach(response, function (possibleError) {
+    response.forEach((possibleError) => {
       if (isObject(possibleError)) {
         if (has(possibleError, "success")) {
           if (!possibleError.success) {
@@ -104,7 +103,7 @@ function isWordPressError(response) {
 }
 
 function getWordPressErrorMessage(error) {
-  if (isString(error)) {
+  if (typeof error === "string") {
     return error
   }
 
@@ -114,7 +113,7 @@ function getWordPressErrorMessage(error) {
     return error.message
   } else if (isObject(error) && has(error, "data")) {
     if (isArray(error.data)) {
-      if (isString(error.data[0])) {
+      if (typeof error.data[0] === "string") {
         return error.data[0]
       }
 
@@ -124,7 +123,7 @@ function getWordPressErrorMessage(error) {
 
       return shopwp.t.e.unknown
     } else {
-      if (isString(error.data)) {
+      if (typeof error.data === "string") {
         return error.data
       }
 
@@ -208,7 +207,7 @@ function maybeHandleApiError(clientError, response, dispatch) {
       }
     }
 
-    if (isString(clientError)) {
+    if (typeof clientError === "string") {
       var errorMessage = clientError
     } else if (isObject(clientError)) {
       var errorMessage = clientError.message

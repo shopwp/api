@@ -1,5 +1,4 @@
-import isError from "lodash/isError"
-import has from "lodash/has"
+import isError from "lodash-es/isError"
 
 function get(endpoint, shopState = {}) {
   return request(
@@ -78,7 +77,7 @@ function request(method, endpoint, data, shopState) {
         return response.json()
       })
       .then((resp) => {
-        if (has(resp, "code") && has(resp, "message")) {
+        if (resp.hasOwnProperty("code") && resp.hasOwnProperty("message")) {
           reject({
             statusCode: resp.data.status,
             message: resp.message,

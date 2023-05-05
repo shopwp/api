@@ -4,9 +4,8 @@ import {
   getWordPressErrorMessage,
 } from "../errors"
 import to from "await-to-js"
-import isEmpty from "lodash/isEmpty"
-import has from "lodash/has"
-import isArray from "lodash/isArray"
+import isEmpty from "lodash-es/isEmpty"
+import isArray from "lodash-es/isArray"
 import { getProducts, getProductsByCollections } from "../internal/products"
 import structuredClone from "@ungap/structured-clone"
 
@@ -131,7 +130,7 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
         })
       }
 
-      if (has(nonFalseyData[0], "products")) {
+      if (nonFalseyData[0].hasOwnProperty("products")) {
         resolve(nonFalseyData[0].products)
       } else {
         resolve(false)

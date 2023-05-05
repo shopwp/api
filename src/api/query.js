@@ -1,6 +1,6 @@
-import isBoolean from "lodash/isBoolean"
-import isArray from "lodash/isArray"
-import isEmpty from "lodash/isEmpty"
+import isBoolean from "lodash-es/isBoolean"
+import isArray from "lodash-es/isArray"
+import isEmpty from "lodash-es/isEmpty"
 import { filterObj } from "@shopwp/common"
 
 function addBooleanToQuery(key, val) {

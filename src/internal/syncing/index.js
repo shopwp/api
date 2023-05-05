@@ -21,7 +21,7 @@ function syncRemoveImages() {
 }
 
 function syncExpire(data) {
-  return get("syncing/expire?data=" + btoa(JSON.stringify(data)))
+  return post("syncing/expire", data)
 }
 
 function turnCronOn(data) {
