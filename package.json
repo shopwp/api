@@ -1,7 +1,7 @@
 {
   "name": "@shopwp/api",
   "sideEffects": false,
-  "version": "7.1.0",
+  "version": "7.1.1",
   "description": "Front-end API for ShopWP.",
   "main": "index.js",
   "scripts": {
@@ -24,6 +24,7 @@
     "react": ">=15.0.1",
     "react-dom": ">=15.0.1"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@ungap/structured-clone": "^1.2.0"
+  }
 }
