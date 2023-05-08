@@ -3,7 +3,7 @@ import {
   isWordPressError,
   getWordPressErrorMessage,
 } from "../errors"
-import to from "await-to-js"
+import { to } from "@shopwp/common"
 import { getCollections } from "../internal/collections"
 
 function fetchCollections(

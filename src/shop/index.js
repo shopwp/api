@@ -1,4 +1,4 @@
-import to from "await-to-js"
+import { to } from "@shopwp/common"
 import { maybeHandleApiError } from "../errors"
 import { getAvailableLocalizations } from "../internal/translator"
 import { sanitizeLanguages } from "@shopwp/common"

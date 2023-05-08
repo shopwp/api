@@ -3,11 +3,10 @@ import {
   isWordPressError,
   getWordPressErrorMessage,
 } from "../errors"
-import to from "await-to-js"
+import { to } from "@shopwp/common"
 import isEmpty from "lodash-es/isEmpty"
 import isArray from "lodash-es/isArray"
 import { getProducts, getProductsByCollections } from "../internal/products"
-import structuredClone from "@ungap/structured-clone"
 
 function fetchProducts(queryParams, shopState, cursor = false) {
   return new Promise(async (resolve, reject) => {
@@ -30,7 +29,7 @@ function fetchProducts(queryParams, shopState, cursor = false) {
       delete queryParams.cursor
     }
 
-    const shopStateCopy = structuredClone(shopState)
+    const shopStateCopy = Object.assign({}, shopState)
 
     if (shopStateCopy) {
       delete shopStateCopy.cartData
