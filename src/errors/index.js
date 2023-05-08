@@ -197,7 +197,7 @@ function maybeAlterErrorMessage(errorMessage, shopState) {
   return finalError
 }
 
-function maybeHandleApiError(clientError, response, dispatch) {
+function maybeHandleApiError(clientError, response, setNotice) {
   if (clientError) {
     if (isObject(clientError)) {
       if (has(clientError, "message")) {
@@ -213,13 +213,10 @@ function maybeHandleApiError(clientError, response, dispatch) {
       var errorMessage = clientError.message
     }
 
-    if (dispatch) {
-      dispatch({
-        type: "SET_NOTICE",
-        payload: {
-          type: "error",
-          message: errorMessage,
-        },
+    if (setNotice) {
+      setNotice({
+        type: "error",
+        message: errorMessage,
       })
     }
 
@@ -227,13 +224,10 @@ function maybeHandleApiError(clientError, response, dispatch) {
   } else if (isWordPressError(response)) {
     let errorMessage = getWordPressErrorMessage(response)
 
-    if (dispatch) {
-      dispatch({
-        type: "SET_NOTICE",
-        payload: {
-          type: "error",
-          message: errorMessage,
-        },
+    if (setNotice) {
+      setNotice({
+        type: "error",
+        message: errorMessage,
       })
     }
 
