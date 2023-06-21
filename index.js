@@ -103,3 +103,5 @@ export {
 } from "./src/internal/customers"
 
 export { queryOptionsNoRefetch, queryOptionsWithRefetch } from "./src/queries"
+
+export { fetchPostById, editPost } from "./src/wordpress"

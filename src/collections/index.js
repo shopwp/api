@@ -10,8 +10,7 @@ function fetchCollections(
   queryParams,
   shopState,
   cursor = false,
-  withProducts = false,
-  queryParamsProducts = false
+  withProducts = false
 ) {
   return new Promise(async (resolve, reject) => {
     if (!queryParams) {
@@ -23,9 +22,7 @@ function fetchCollections(
 
     var params = {
       queryParams: queryParams,
-      shopState: shopState,
       withProducts: withProducts,
-      queryParamsProducts: queryParamsProducts,
     }
 
     if (cursor) {

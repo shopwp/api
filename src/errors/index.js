@@ -197,44 +197,32 @@ function maybeAlterErrorMessage(errorMessage, shopState) {
   return finalError
 }
 
-function maybeHandleApiError(clientError, response, setNotice) {
+function maybeHandleApiError(clientError, response) {
+  var errorMessage = false
+
   if (clientError) {
     if (isObject(clientError)) {
       if (has(clientError, "message")) {
-        var errorMessage = clientError.message
+        errorMessage = clientError.message
       } else {
-        var errorMessage = JSON.stringify(clientError)
+        errorMessage = JSON.stringify(clientError)
       }
+      console.warn("ShopWP Error: ", errorMessage)
     }
 
     if (typeof clientError === "string") {
-      var errorMessage = clientError
+      errorMessage = clientError
+      console.warn("ShopWP Error: ", errorMessage)
     } else if (isObject(clientError)) {
-      var errorMessage = clientError.message
+      errorMessage = clientError.message
+      console.warn("ShopWP Error: ", errorMessage)
     }
-
-    if (setNotice) {
-      setNotice({
-        type: "error",
-        message: errorMessage,
-      })
-    }
-
-    return errorMessage
   } else if (isWordPressError(response)) {
-    let errorMessage = getWordPressErrorMessage(response)
-
-    if (setNotice) {
-      setNotice({
-        type: "error",
-        message: errorMessage,
-      })
-    }
-
-    return errorMessage
-  } else {
-    return false
+    errorMessage = getWordPressErrorMessage(response)
+    console.warn("ShopWP Error: ", errorMessage)
   }
+
+  return errorMessage
 }
 
 export {

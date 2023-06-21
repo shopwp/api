@@ -50,8 +50,10 @@ async function getLocalizations(shopState, dispatch) {
     payload: false,
   })
 
-  if (maybeHandleApiError(error, resp, dispatch)) {
-    return error
+  var maybeApiError = maybeHandleApiError(error, resp)
+
+  if (maybeApiError) {
+    return maybeApiError
   }
 
   var countries = sanitizeTranslations(resp.data.availableCountries)
