@@ -190,6 +190,8 @@ function maybeAlterErrorMessage(errorMessage, shopState) {
     finalError = shopState.t.e.badCreds
   } else if (error.includes('Parse error on "}" (RCURLY)')) {
     finalError = shopState.t.e.badApiField
+  } else if (error.includes("first cannot exceed 250")) {
+    finalError = shopState.t.e.pageSizeTooHigh
   } else {
     finalError = error
   }
