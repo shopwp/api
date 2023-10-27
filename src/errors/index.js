@@ -28,7 +28,11 @@ function findErrorMessage(maybeErrorMessage, shopState) {
     }
   }
 
-  return maybeErrorMessage.toString()
+  if (maybeErrorMessage) {
+    return maybeErrorMessage.toString()
+  }
+
+  return false
 }
 
 function isWordPressError(response) {
