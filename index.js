@@ -79,7 +79,7 @@ export {
   connectWebhooks,
 } from "./src/internal/syncing"
 
-export { clearCache } from "./src/internal/tools"
+export { clearCacheTool } from "./src/internal/tools"
 
 export {
   maybeAlterErrorMessage,
@@ -105,3 +105,4 @@ export {
 export { queryOptionsNoRefetch, queryOptionsWithRefetch } from "./src/queries"
 
 export { fetchPostById, editPost } from "./src/wordpress"
+export { getCache, maybeSetCache, clearCache } from "./src/cache"

@@ -7,6 +7,7 @@ import { to } from "@shopwp/common"
 import isEmpty from "lodash-es/isEmpty"
 import isArray from "lodash-es/isArray"
 import { getProducts, getProductsByCollections } from "../internal/products"
+import { getCache, maybeSetCache, clearCache } from "../cache"
 
 function fetchProducts(queryParams, shopState, cursor = false) {
   return new Promise(async (resolve, reject) => {
@@ -29,10 +30,33 @@ function fetchProducts(queryParams, shopState, cursor = false) {
       delete queryParams.cursor
     }
 
+    if (shopwp.misc.cacheEnabled) {
+      const [queryCacheError, queryCache] = await to(getCache(queryParams))
+
+      if (queryCacheError) {
+        return reject({
+          type: "error",
+          message: JSON.stringify(queryCacheError),
+        })
+      }
+
+      if (queryCache) {
+        if (queryCache.cacheKey === shopwp.misc.cacheKey) {
+          console.log("📦 Valid products cache found, just returning ...")
+          return resolve(queryCache)
+        }
+      }
+
+      if (queryCache && queryCache.cacheKey !== shopwp.misc.cacheKey) {
+        clearCache()
+      }
+    }
+
     const shopStateCopy = Object.assign({}, shopState)
 
     if (shopStateCopy) {
       delete shopStateCopy.cartData
+      delete shopStateCopy.t
     }
 
     const [resultsError, results] = await to(
@@ -56,6 +80,12 @@ function fetchProducts(queryParams, shopState, cursor = false) {
         message: getWordPressErrorMessage(results),
       })
     }
+
+    maybeSetCache({
+      cacheType: "products",
+      dataToHash: queryParams,
+      dataToCache: results.data,
+    })
 
     resolve(results.data)
   })
@@ -82,6 +112,27 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
       queryParams.cursor = cursor
     } else {
       delete queryParams.cursor
+    }
+
+    if (shopwp.misc.cacheEnabled) {
+      const [queryCacheError, queryCache] = await to(getCache(queryParams))
+
+      if (queryCacheError) {
+        return reject({
+          type: "error",
+          message: JSON.stringify(queryCacheError),
+        })
+      }
+
+      if (queryCache) {
+        if (queryCache.cacheKey === shopwp.misc.cacheKey) {
+          return resolve(queryCache)
+        }
+      }
+
+      if (queryCache && queryCache.cacheKey !== shopwp.misc.cacheKey) {
+        clearCache()
+      }
     }
 
     let cloneShopState = Object.assign({}, shopState)
@@ -123,21 +174,43 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
     if (!isEmpty(nonFalseyData)) {
       // Server is returning products from more than one collection
       if (nonFalseyData.length > 1) {
-        return resolve({
+        let data = {
           edges: nonFalseyData,
           pageInfo: {
             hasNextPage: false,
             hasPreviousPage: false,
           },
+        }
+
+        maybeSetCache({
+          cacheType: "collectionProducts",
+          dataToHash: queryParams,
+          dataToCache: data,
         })
+
+        return resolve(data)
       }
 
       if (nonFalseyData[0].hasOwnProperty("products")) {
-        resolve(nonFalseyData[0].products)
+        let data = nonFalseyData[0].products
+
+        maybeSetCache({
+          cacheType: "collectionProducts",
+          dataToHash: queryParams,
+          dataToCache: data,
+        })
+
+        resolve(data)
       } else {
         resolve(false)
       }
     } else {
+      maybeSetCache({
+        cacheType: "collectionProducts",
+        dataToHash: queryParams,
+        dataToCache: nonFalseyData,
+      })
+
       resolve(nonFalseyData)
     }
   })

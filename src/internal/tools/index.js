@@ -1,7 +1,7 @@
 import { post } from "../request"
 
-function clearCache() {
+function clearCacheTool() {
   return post("cache")
 }
 
-export { clearCache }
+export { clearCacheTool }

@@ -5,6 +5,7 @@ import {
 } from "../errors"
 import { to } from "@shopwp/common"
 import { getCollections } from "../internal/collections"
+import { getCache, maybeSetCache, clearCache } from "../cache"
 
 function fetchCollections(
   queryParams,
@@ -29,6 +30,30 @@ function fetchCollections(
       params.queryParams.cursor = cursor
     }
 
+    if (shopwp.misc.cacheEnabled) {
+      const [queryCacheError, queryCache] = await to(getCache(params))
+
+      console.log("queryCache", queryCache)
+
+      if (queryCacheError) {
+        return reject({
+          type: "error",
+          message: JSON.stringify(queryCacheError),
+        })
+      }
+
+      if (queryCache) {
+        if (queryCache.cacheKey === shopwp.misc.cacheKey) {
+          console.log("📦 Valid collections cache found, just returning ...")
+          return resolve(queryCache)
+        }
+      }
+
+      if (queryCache && queryCache.cacheKey !== shopwp.misc.cacheKey) {
+        clearCache()
+      }
+    }
+
     const [resultsError, results] = await to(getCollections(params))
 
     if (resultsError) {
@@ -44,6 +69,12 @@ function fetchCollections(
         message: getWordPressErrorMessage(results),
       })
     }
+
+    maybeSetCache({
+      cacheType: "collections",
+      dataToHash: params,
+      dataToCache: results.data,
+    })
 
     resolve(results.data)
   })
