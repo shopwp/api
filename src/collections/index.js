@@ -33,8 +33,6 @@ function fetchCollections(
     if (shopwp.misc.cacheEnabled) {
       const [queryCacheError, queryCache] = await to(getCache(params))
 
-      console.log("queryCache", queryCache)
-
       if (queryCacheError) {
         return reject({
           type: "error",
