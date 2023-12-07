@@ -34,21 +34,15 @@ function maybeSetCache(params) {
   finalResults.cacheKey = shopwp.misc.cacheKey
 
   set(btoa(JSON.stringify(params.dataToHash)), finalResults)
-    .then(() =>
-      console.log("✅ Set ShopWP cache successfully for: " + params.cacheType)
-    )
-    .catch((err) => console.log("🚫 Failed to set ShopWP cache!", err))
 
   return finalResults
 }
 
 function getCache(queryParams) {
-  console.log("⌛️ Checking ShopWP cache ...")
   return get(btoa(JSON.stringify(queryParams)))
 }
 
 function clearCache() {
-  console.info("🧹 Clearing ShopWP Cache ...")
   clear()
 }
 

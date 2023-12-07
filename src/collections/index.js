@@ -42,7 +42,6 @@ function fetchCollections(
 
       if (queryCache) {
         if (queryCache.cacheKey === shopwp.misc.cacheKey) {
-          console.log("📦 Valid collections cache found, just returning ...")
           return resolve(queryCache)
         }
       }

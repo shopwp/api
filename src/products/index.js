@@ -42,7 +42,6 @@ function fetchProducts(queryParams, shopState, cursor = false) {
 
       if (queryCache) {
         if (queryCache.cacheKey === shopwp.misc.cacheKey) {
-          console.log("📦 Valid products cache found, just returning ...")
           return resolve(queryCache)
         }
       }
