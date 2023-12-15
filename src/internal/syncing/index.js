@@ -1,4 +1,4 @@
-import { get, post } from "../request"
+import { post } from "../request"
 
 function getSyncingStatus(data) {
   return post("syncing/status", data)
@@ -59,8 +59,8 @@ function removeWebhooks(data) {
   return post("webhooks/delete/all", data)
 }
 
-function connectWebhooks() {
-  return post("webhooks/connect")
+function connectWebhooks(data) {
+  return post("webhooks/connect", data)
 }
 
 export {
