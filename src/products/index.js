@@ -135,6 +135,7 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
     }
 
     let cloneShopState = Object.assign({}, shopState)
+
     delete cloneShopState.t
 
     const [resultsError, results] = await to(
