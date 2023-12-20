@@ -33,13 +33,21 @@ function maybeSetCache(params) {
 
   finalResults.cacheKey = shopwp.misc.cacheKey
 
-  set(btoa(JSON.stringify(params.dataToHash)), finalResults)
+  set(btoa(encodeURI(JSON.stringify(params.dataToHash))), finalResults)
 
   return finalResults
 }
 
 function getCache(queryParams) {
-  return get(btoa(JSON.stringify(queryParams)))
+  try {
+    var decoded = btoa(encodeURI(JSON.stringify(queryParams)))
+  } catch (error) {
+    return Promise.reject(
+      "ShopWP Error: Unable to display products. You may be using unsupported characters in your ShopWP shortcode like €, or an emoji. Please check again."
+    )
+  }
+
+  return get(decoded)
 }
 
 function clearCache() {
