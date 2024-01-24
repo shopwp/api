@@ -20,12 +20,16 @@ function syncRemoveImages() {
   return post("syncing/remove/images")
 }
 
-function syncExpire(data) {
+function manuallyCancelSync(data) {
   return post("syncing/expire", data)
 }
 
-function turnCronOn(data) {
-  return post("syncing/cron/add", data)
+function syncAndScheduleNewCron(data) {
+  return post("syncing/cron/scheduleAndSync", data)
+}
+
+function scheduleNewCron(data) {
+  return post("syncing/cron/schedule", data)
 }
 
 function disconnectCron() {
@@ -68,9 +72,9 @@ export {
   setSyncingIndicator,
   syncShopifyData,
   syncRemove,
-  syncExpire,
+  manuallyCancelSync,
   syncOn,
-  turnCronOn,
+  scheduleNewCron,
   syncOff,
   disconnectCron,
   updateSettings,
@@ -78,4 +82,5 @@ export {
   syncRemoveImages,
   removeWebhooks,
   connectWebhooks,
+  syncAndScheduleNewCron,
 }
