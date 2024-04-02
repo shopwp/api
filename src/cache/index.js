@@ -1,4 +1,5 @@
 import { get, set, clear } from "idb-keyval"
+import { encodeSettings } from "@shopwp/common"
 
 /*
 
@@ -33,21 +34,25 @@ function maybeSetCache(params) {
 
   finalResults.cacheKey = shopwp.misc.cacheKey
 
-  set(btoa(encodeURI(JSON.stringify(params.dataToHash))), finalResults)
+  var encoded = encodeSettings(params.dataToHash)
+
+  if (encoded instanceof Error) {
+    console.error(encoded.message)
+  } else {
+    set(encoded, finalResults)
+  }
 
   return finalResults
 }
 
 function getCache(queryParams) {
-  try {
-    var decoded = btoa(encodeURI(JSON.stringify(queryParams)))
-  } catch (error) {
-    return Promise.reject(
-      "ShopWP Error: Unable to display products. You may be using unsupported characters in your ShopWP shortcode like €, or an emoji. Please check again."
-    )
-  }
+  var encoded = encodeSettings(queryParams)
 
-  return get(decoded)
+  if (encoded instanceof Error) {
+    return Promise.reject(encoded.message)
+  } else {
+    return get(encoded)
+  }
 }
 
 function clearCache() {
