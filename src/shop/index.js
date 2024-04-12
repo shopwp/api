@@ -53,7 +53,8 @@ async function getLocalizations(shopState, dispatch) {
   var maybeApiError = maybeHandleApiError(error, resp)
 
   if (maybeApiError) {
-    return maybeApiError
+    console.error(maybeApiError)
+    return false
   }
 
   var countries = sanitizeTranslations(resp.data.availableCountries)

@@ -1,8 +1,4 @@
-import {
-  maybeAlterErrorMessage,
-  isWordPressError,
-  getWordPressErrorMessage,
-} from "../errors"
+import { maybeHandleApiError } from "../errors"
 import { to } from "@shopwp/common"
 import isEmpty from "lodash-es/isEmpty"
 import isArray from "lodash-es/isArray"
@@ -33,10 +29,12 @@ function fetchProducts(queryParams, shopState, cursor = false) {
     if (shopwp.misc.cacheEnabled) {
       const [queryCacheError, queryCache] = await to(getCache(queryParams))
 
-      if (queryCacheError) {
+      var errMsg = maybeHandleApiError(queryCacheError, queryCache)
+
+      if (errMsg) {
         return reject({
           type: "error",
-          message: JSON.stringify(queryCacheError),
+          message: errMsg,
         })
       }
 
@@ -65,19 +63,14 @@ function fetchProducts(queryParams, shopState, cursor = false) {
       })
     )
 
-    if (resultsError) {
+    var maybeApiError = maybeHandleApiError(resultsError, results)
+
+    if (maybeApiError) {
       reject({
         type: "error",
-        message: maybeAlterErrorMessage(resultsError, shopState),
+        message: maybeApiError,
       })
       return
-    }
-
-    if (isWordPressError(results)) {
-      return reject({
-        type: "error",
-        message: getWordPressErrorMessage(results),
-      })
     }
 
     maybeSetCache({
@@ -116,10 +109,12 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
     if (shopwp.misc.cacheEnabled) {
       const [queryCacheError, queryCache] = await to(getCache(queryParams))
 
-      if (queryCacheError) {
+      var errorMsg = maybeHandleApiError(queryCacheError, queryCache)
+
+      if (errorMsg) {
         return reject({
           type: "error",
-          message: JSON.stringify(queryCacheError),
+          message: errorMsg,
         })
       }
 
@@ -145,19 +140,14 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
       })
     )
 
-    if (resultsError) {
+    var maybeApiError = maybeHandleApiError(resultsError, results)
+
+    if (maybeApiError) {
       reject({
         type: "error",
-        message: maybeAlterErrorMessage(resultsError, shopState),
+        message: maybeApiError,
       })
       return
-    }
-
-    if (isWordPressError(results)) {
-      return reject({
-        type: "error",
-        message: getWordPressErrorMessage(results),
-      })
     }
 
     if (isEmpty(results.data)) {

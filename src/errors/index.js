@@ -231,9 +231,4 @@ function maybeHandleApiError(apiError, apiResponse) {
   return errorMessage
 }
 
-export {
-  maybeAlterErrorMessage,
-  isWordPressError,
-  getWordPressErrorMessage,
-  maybeHandleApiError,
-}
+export { maybeAlterErrorMessage, maybeHandleApiError }

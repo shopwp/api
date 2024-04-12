@@ -82,12 +82,7 @@ export {
 
 export { clearCacheTool } from "./src/internal/tools"
 
-export {
-  maybeAlterErrorMessage,
-  isWordPressError,
-  getWordPressErrorMessage,
-  maybeHandleApiError,
-} from "./src/errors"
+export { maybeAlterErrorMessage, maybeHandleApiError } from "./src/errors"
 
 export {
   loginCustomer,

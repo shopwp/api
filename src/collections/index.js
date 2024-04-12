@@ -1,9 +1,5 @@
-import {
-  maybeAlterErrorMessage,
-  isWordPressError,
-  getWordPressErrorMessage,
-} from "../errors"
 import { to } from "@shopwp/common"
+import { maybeHandleApiError } from "../errors"
 import { getCollections } from "../internal/collections"
 import { getCache, maybeSetCache, clearCache } from "../cache"
 
@@ -33,10 +29,12 @@ function fetchCollections(
     if (shopwp.misc.cacheEnabled) {
       const [queryCacheError, queryCache] = await to(getCache(params))
 
-      if (queryCacheError) {
+      var errMsg = maybeHandleApiError(queryCacheError, queryCache)
+
+      if (errMsg) {
         return reject({
           type: "error",
-          message: JSON.stringify(queryCacheError),
+          message: errMsg,
         })
       }
 
@@ -53,17 +51,12 @@ function fetchCollections(
 
     const [resultsError, results] = await to(getCollections(params))
 
-    if (resultsError) {
-      return reject({
-        type: "error",
-        message: maybeAlterErrorMessage(resultsError, shopState),
-      })
-    }
+    var errMsg = maybeHandleApiError(resultsError, results)
 
-    if (isWordPressError(results)) {
+    if (errMsg) {
       return reject({
         type: "error",
-        message: getWordPressErrorMessage(results),
+        message: errMsg,
       })
     }
 
