@@ -37,12 +37,6 @@ export {
 } from "./internal/license"
 
 export {
-  activateRechargeApiKey,
-  deactivateRechargeApiKey,
-  getRechargeSellingGroupsFromProductId,
-} from "./internal/subscriptions"
-
-export {
   activateYotpoApiKey,
   deactivateYotpoApiKey,
   getYotpoReviews,
