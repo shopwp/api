@@ -208,27 +208,44 @@ function maybeHandleApiError(apiError, apiResponse) {
 
   if (apiError) {
     if (isObject(apiError)) {
-      if (has(apiError, "message")) {
+      if (has(apiError, "graphQLErrors")) {
+        errorMessage = apiError.graphQLErrors[0].message
+      } else if (has(apiError, "message")) {
         errorMessage = apiError.message
       } else {
         errorMessage = JSON.stringify(apiError)
       }
       console.warn("ShopWP Error: ", errorMessage)
-    }
-
-    if (typeof apiError === "string") {
+    } else if (typeof apiError === "string") {
       errorMessage = apiError
-      console.warn("ShopWP Error: ", errorMessage)
-    } else if (isObject(apiError)) {
-      errorMessage = apiError.message
       console.warn("ShopWP Error: ", errorMessage)
     }
   } else if (isWordPressError(apiResponse)) {
     errorMessage = getWordPressErrorMessage(apiResponse)
     console.warn("ShopWP Error: ", errorMessage)
+  } else {
+    if (isObject(apiResponse)) {
+      // Look for the 'userErrors' property from Shopify API
+      var firstKey = Object.keys(apiResponse)[0]
+
+      if (has(apiResponse[firstKey], "userErrors")) {
+        if (apiResponse[firstKey].userErrors.length) {
+          errorMessage = apiResponse[firstKey].userErrors[0].message
+        }
+      }
+    }
   }
 
-  return errorMessage
+  if (errorMessage) {
+    return "Error: " + errorMessage
+  } else {
+    return errorMessage
+  }
 }
 
-export { maybeAlterErrorMessage, maybeHandleApiError }
+export {
+  maybeAlterErrorMessage,
+  maybeHandleApiError,
+  getWordPressErrorMessage,
+  isWordPressError,
+}

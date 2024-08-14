@@ -1,80 +1,955 @@
-import isBoolean from "lodash-es/isBoolean"
-import isArray from "lodash-es/isArray"
-import isEmpty from "lodash-es/isEmpty"
-import { filterObj } from "@shopwp/common"
+function doGraphQuery(queryData, client) {
+  return new Promise(async (resolve, reject) => {
+    if (!client) {
+      return reject(
+        "No Shopify connection found. Please try reconnecting your Shopify store to ShopWP."
+      )
+    }
 
-function addBooleanToQuery(key, val) {
-  if (isBoolean(val)) {
-    var bool_converted = val ? "true" : "false"
+    const { data, errors, extensions } = await client.request(queryData.query, {
+      variables: wp.hooks.applyFilters(
+        "cart.requestSettings",
+        wp.hooks.applyFilters("product.requestSettings", queryData.variables)
+      ),
+    })
+
+    if (errors) {
+      reject(errors)
+    }
+
+    resolve(data)
+  })
+}
+
+function makeProductsQuery(queryParams, customSchema = false) {
+  const schema = customSchema
+    ? customSchema
+    : productsDefaultSchema(queryParams)
+
+  const finalVars = {
+    query: queryParams.query,
+    first: queryParams.first,
+    reverse: queryParams.reverse,
+    sortKey: queryParams.sortKey ? queryParams.sortKey : "TITLE",
+    language: queryParams.language,
+    country: queryParams.country,
+    buyer: queryParams.buyer,
+  }
+
+  if (queryParams.cursor) {
+    finalVars.cursor = queryParams.cursor
+  }
+
+  return {
+    query: `query ProductQuery($query: String!, $first: Int!, $cursor: String, $sortKey: ProductSortKeys, $reverse: Boolean, $language: LanguageCode, $country: CountryCode, $buyer: BuyerInput) @inContext(country: $country, language: $language, buyer: $buyer) {
+            products(first: $first, query: $query, after: $cursor, reverse: $reverse, sortKey: $sortKey) {
+               pageInfo {
+                  hasNextPage
+                  hasPreviousPage
+               }
+               edges {
+                  cursor
+                  node {
+                     ${schema}
+                  }
+               }
+            }
+         }`,
+    variables: finalVars,
+  }
+}
+
+function productsDefaultSchema(queryParams = false) {
+  if (queryParams && queryParams.metafields) {
+    var metafields = queryParams.metafields
   } else {
-    var bool_converted = val
+    var metafields = ``
   }
 
-  return key + ":" + bool_converted
+  return `
+    availableForSale
+    compareAtPriceRange {
+      maxVariantPrice {
+          amount
+          currencyCode
+      }
+      minVariantPrice {
+          amount
+          currencyCode
+      }
+    }
+    createdAt
+    description
+    descriptionHtml
+    handle
+    id
+    onlineStoreUrl
+    options {
+      id
+      name
+      values
+    }
+    priceRange {
+      maxVariantPrice {
+          amount
+          currencyCode
+      }
+      minVariantPrice {
+          amount
+          currencyCode
+      }
+    }
+    productType
+    publishedAt
+    requiresSellingPlan
+    title
+    totalInventory
+    updatedAt
+    vendor
+    tags
+    images(first: 250) {
+      edges {
+          node {
+            width
+            height
+            altText
+            id
+            originalSrc
+            transformedSrc
+          }
+      }
+    },
+    media(first: 250) {
+      edges {
+          node {
+            alt
+            mediaContentType
+            previewImage {
+                width
+                height
+                altText
+                id
+                url
+            }
+            ...on ExternalVideo {
+                id
+                embeddedUrl
+            }
+            ...on MediaImage {
+                image {
+                  width
+                  height
+                  altText
+                  id
+                  originalSrc
+                  transformedSrc                        
+                }
+            }
+            ...on Video {
+                sources {
+                  url
+                  mimeType
+                  format
+                  height
+                  width
+                }
+            }
+          }
+      }
+    },
+    variants(first: 100) {
+      edges {
+          node {
+            product {
+                title
+                productType
+                vendor
+                collections(first: 1) {
+                  edges {
+                      node {
+                        title
+                      }
+                  }
+                }
+            }
+            availableForSale
+            compareAtPrice {
+                amount
+                currencyCode
+            }
+            currentlyNotInStock
+            id
+            image {
+                width
+                height
+                altText
+                id
+                originalSrc
+                transformedSrc
+            }
+            ${metafields}
+            price {
+                amount
+                currencyCode
+            }
+            quantityAvailable
+            requiresShipping
+            selectedOptions {
+                name 
+                value
+            }
+            sellingPlanAllocations(first: 50) {
+                edges {
+                  node {
+                      sellingPlan {
+                        id
+                        name
+                        priceAdjustments {
+                            adjustmentValue {
+                              ...on SellingPlanPriceAdjustmentValue {
+                                  ...on SellingPlanFixedAmountPriceAdjustment {
+                                    adjustmentAmount {
+                                          amount
+                                    }
+                                  }
+                              }
+
+                              ...on SellingPlanFixedPriceAdjustment {
+                                  price {
+                                    amount
+                                  }
+                              }
+
+                              ... on SellingPlanPercentagePriceAdjustment {
+                                  adjustmentPercentage
+                              }
+                            }
+                        }
+                      }
+                      priceAdjustments {
+                        compareAtPrice {
+                            amount
+                        }
+                        price {
+                            amount
+                        }
+                      }
+                      remainingBalanceChargeAmount {
+                        amount
+                      }
+                      checkoutChargeAmount {
+                        amount
+                      }
+                  }
+                }
+            }
+            sku
+            title
+            weight
+            weightUnit
+          }
+      }
+    }
+    sellingPlanGroups(first: 50) {
+      edges {
+          node {
+            appName
+            name
+            options {
+                name
+                values
+            }
+            sellingPlans(first: 50) {
+                edges {
+                  node {
+                      description
+                      id
+                      name
+                      recurringDeliveries
+                      options {
+                        name
+                        value
+                      }
+                      priceAdjustments {
+                        orderCount
+                        adjustmentValue {
+                            ...on SellingPlanPriceAdjustmentValue {
+                              ...on SellingPlanFixedAmountPriceAdjustment {
+                                  adjustmentAmount {
+                                        amount
+                                  }
+                              }
+                            }
+
+                            ...on SellingPlanFixedPriceAdjustment {
+                              price {
+                                  amount
+                              }
+                            }
+
+                            ... on SellingPlanPercentagePriceAdjustment {
+                              adjustmentPercentage
+                            }
+                        }
+                      }
+                  }
+                }
+            }
+          }
+      }
+    }`
 }
 
-function addStringToQuery(key, val) {
-  return key + ":" + '"' + val + '"'
-}
-
-function queryChecks(key, val, query) {
-  if (isBoolean(val) || val === "true" || val === "false") {
-    query += addBooleanToQuery(key, val)
+function collectionsSchema(queryParams, withProducts) {
+  if (queryParams.first) {
+    var first = queryParams.first
   } else {
-    query += addStringToQuery(key, val)
+    var first = 250
   }
 
-  return query
+  if (queryParams.sortKey) {
+    var sortKey = queryParams.sortKey.toUpperCase()
+  } else {
+    var sortKey = "TITLE"
+  }
+
+  var prodDefaultSchema = productsDefaultSchema(queryParams)
+
+  var products = withProducts
+    ? "products(first: " +
+      first +
+      " sortKey: " +
+      sortKey +
+      ") { pageInfo { hasNextPage hasPreviousPage } edges { cursor node { " +
+      prodDefaultSchema +
+      " } } }"
+    : ""
+
+  return `title
+    handle
+    id
+    description
+    descriptionHtml
+    onlineStoreUrl
+    image {
+      width
+      height
+      altText
+      id
+      originalSrc
+      transformedSrc
+    }
+    ${products}`
 }
 
-function getLastKey(obj) {
-  var keys = Object.keys(obj)
-  return keys[keys.length - 1]
+function cartSchema(cartData) {
+  var metafields = ``
+
+  if (cartData && cartData.metafields) {
+    metafields = cartData.metafields
+  }
+
+  return `
+  id
+  note
+  checkoutUrl
+  createdAt
+  updatedAt
+  totalQuantity
+  buyerIdentity {
+    countryCode
+    email
+    phone
+  }
+  attributes {
+    key
+    value
+  }
+  cost {
+    checkoutChargeAmount {
+        amount
+        currencyCode               
+    }
+    subtotalAmount {
+        amount
+        currencyCode
+    }
+    subtotalAmountEstimated
+    totalAmount {
+        amount
+        currencyCode
+    }
+    totalAmountEstimated
+    totalDutyAmount {
+        amount
+        currencyCode
+    }
+    totalDutyAmountEstimated
+    totalTaxAmount {
+        amount
+        currencyCode
+    }
+    totalTaxAmountEstimated
+  }
+  discountCodes {
+    applicable
+    code
+  }
+  discountAllocations {
+    discountedAmount {
+        amount
+        currencyCode
+    }
+  }
+  lines(first: 250) {
+    edges {
+        node {
+          id
+          merchandise {
+              ... on ProductVariant {
+                product {
+                    id
+                    title
+                    handle
+                }
+                availableForSale
+                compareAtPrice {
+                    amount
+                    currencyCode
+                }
+                currentlyNotInStock
+                id
+                image {
+                    width
+                    height
+                    altText
+                    id
+                    originalSrc
+                    transformedSrc
+                }
+                ${metafields}
+                price {
+                    amount
+                    currencyCode
+                }
+                quantityAvailable
+                requiresShipping
+                selectedOptions {
+                    name 
+                    value
+                }
+                sku
+                title
+                weight
+                weightUnit
+              }
+          }
+          quantity
+          sellingPlanAllocation {
+              priceAdjustments {
+                price {
+                    amount
+                    currencyCode
+                }
+              }
+              sellingPlan {
+                description
+                id
+                name
+                recurringDeliveries
+                options {
+                    name
+                    value
+                }
+                priceAdjustments {
+                    adjustmentValue 
+                    orderCount
+                }
+                
+              }
+          }
+          attributes {
+              key
+              value
+          }
+          discountAllocations {
+              discountedAmount {
+                amount
+                currencyCode
+              }
+          }
+          cost {
+              amountPerQuantity {
+                amount
+                currencyCode
+              }
+              compareAtAmountPerQuantity {
+                amount
+                currencyCode
+              }
+              subtotalAmount {
+                amount
+                currencyCode
+              }
+              totalAmount {
+                amount
+                currencyCode
+              }
+          }
+        }
+    }
+  }`
 }
 
-function addNestedQuery(key, values, allAttrs) {
-  var query = ""
-  var lastKey = getLastKey(values)
-  var mainKey = key
+function getCartQuery(cartData) {
+  return `query($id: ID!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+    cart(id: $id) {
+      ${cartSchema(cartData)}
+    }
+  }`
+}
 
-  for (var key in values) {
-    query = queryChecks(mainKey, values[key], query)
+function createCartQuery(cartData) {
+  return `mutation cartCreate($lines: [CartLineInput!], $note: String, $attributes: [AttributeInput!]!, $buyerIdentity: CartBuyerIdentityInput
+, $discountCodes: [String!], $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+      cartCreate(input: {
+          lines: $lines, 
+          note: $note, 
+          attributes: $attributes, 
+          discountCodes: $discountCodes, 
+          buyerIdentity: $buyerIdentity
+      }) 
+      {
+          cart {
+            ${cartSchema(cartData)}
+          }
+          userErrors {
+            field
+            code
+            message
+          }
+      }
+    }`
+}
 
-    if (values[key] !== values[lastKey]) {
-      query += " " + getConnective(allAttrs) + " "
+function createAddLinesCartQuery(cartData) {
+  return `mutation cartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+    cartLinesAdd(cartId: $cartId, lines: $lines) {
+        cart {
+          ${cartSchema(cartData)}
+        }
+        userErrors {
+          field
+          code
+          message
+        }
+    }
+  }`
+}
+
+function createUpdateLinesCartQuery(cartData) {
+  return `mutation cartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+      cartLinesUpdate(cartId: $cartId, lines: $lines) {
+        cart {
+            ${cartSchema(cartData)}
+        }
+        userErrors {
+            field
+            message
+        }
+      }
+  }`
+}
+
+function createRemoveLinesCartQuery(cartData) {
+  return `mutation cartLinesRemove($cartId: ID!, $lineIds: [ID!]!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+      cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+        cart {
+            ${cartSchema(cartData)}
+        }
+        userErrors {
+            field
+            message
+        }
+      }
+  }`
+}
+
+function createUpdateCartNoteQuery(cartData) {
+  return `mutation cartNoteUpdate($cartId: ID!, $note: String!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+      cartNoteUpdate(cartId: $cartId, note: $note) {
+        cart {
+            ${cartSchema(cartData)}
+        }
+        userErrors {
+            field
+            message
+        }
+      }
+  }`
+}
+
+function createCartDiscountQuery(cartData) {
+  return `mutation cartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!], $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+      cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
+        cart {
+            ${cartSchema(cartData)}
+        }
+        userErrors {
+            field
+            message
+        }
+      }
+  }`
+}
+
+function createUpdateCartAttributesQuery(cartData) {
+  return `mutation cartAttributesUpdate($attributes: [AttributeInput!]!, $cartId: ID!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) 
+    {
+        cart {
+          ${cartSchema(cartData)}
+        }
+        userErrors {
+          code
+          field
+          message
+        }
+    }
+  }`
+}
+
+/*
+
+Used for updating existing carts, after a user logs in
+
+*/
+function createUpdateBuyerIdentityQuery(cartData) {
+  return `mutation cartBuyerIdentityUpdate($buyerIdentity: CartBuyerIdentityInput!, $cartId: ID!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+      cartBuyerIdentityUpdate(buyerIdentity: $buyerIdentity, cartId: $cartId) {
+        cart {
+            ${cartSchema(cartData)}
+        }
+        userErrors {
+            field
+            message
+        }
+      }
+  }`
+}
+
+function createGetallTagsQuery() {
+  return `query {
+    productTags(first:250) {
+      edges {
+          node
+      }
+    }
+  }`
+}
+
+function createGetallTypesQuery() {
+  return `query {
+    productTypes(first:250) {
+      edges {
+          node
+      }
+    }
+  }`
+}
+
+// TODO: It would be nice to call a productVendors query instead of looping through all products
+function createGetallVendorsQuery() {
+  return `query ($numProducts: Int!, $cursor: String) {
+    products(first: $numProducts, after: $cursor) {
+      pageInfo {
+          hasNextPage
+          endCursor
+        }
+        edges {
+            node {
+              vendor
+            }
+        }
+    }
+  }`
+}
+
+function createGetProductsFromCollectionsQuery(queryParams) {
+  return `query ProductByCollections($query: String, $first: Int!, $sortKey: ProductCollectionSortKeys, $reverse: Boolean, $language: LanguageCode, $country: CountryCode, $buyer: BuyerInput) @inContext(country: $country, language: $language, buyer: $buyer) {
+    collections(first: 250, query: $query) {
+      edges {
+        node {
+          products(first: $first, sortKey: $sortKey, reverse: $reverse) {
+            edges {
+              cursor
+              node {
+                ${productsDefaultSchema(queryParams)}
+              }
+            }
+          }
+        }
+      }
+    }
+  }`
+}
+
+function createCollectionsQuery(
+  queryParams,
+  withProducts = false,
+  customSchema = false
+) {
+  var schema = customSchema
+    ? customSchema
+    : collectionsSchema(queryParams, withProducts)
+
+  if (!queryParams.cursor) {
+    delete queryParams.cursor
+  }
+
+  return `query($query: String!, $first: Int!, $cursor: String, $sortKey: CollectionSortKeys, $reverse: Boolean, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+    collections(first: $first, query: $query, after: $cursor, reverse: $reverse, sortKey: $sortKey) {
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+        }
+        edges {
+          cursor
+          node {
+              ${schema}
+          }
+        }
+    }
+  }`
+}
+
+function makeGetCartQuery(cartData) {
+  const variables = {
+    id: cartData.id,
+    language: cartData.buyerIdentity.language,
+    country: cartData.buyerIdentity.country,
+  }
+
+  return {
+    query: getCartQuery(cartData),
+    variables: variables,
+  }
+}
+
+function makeCreateCartQuery(cartData) {
+  var variables = {
+    lines: cartData.lines ? cartData : [],
+    note: cartData.note ? cartData.note : "",
+    attributes: cartData.attributes ? cartData.attributes : [],
+    discountCodes: cartData.discountCodes ? cartData.discountCodes : [],
+    language: cartData.buyerIdentity.language,
+    country: cartData.buyerIdentity.country,
+  }
+
+  if (cartData.buyerIdentity.customerAccessToken) {
+    variables.buyerIdentity = {
+      customerAccessToken: cartData.buyerIdentity.customerAccessToken,
+    }
+
+    if (cartData.buyerIdentity.companyLocationId) {
+      variables.buyerIdentity.companyLocationId =
+        cartData.buyerIdentity.companyLocationId
     }
   }
 
-  return query
+  return {
+    query: createCartQuery(cartData),
+    variables: variables,
+  }
 }
 
-function getConnective(attrs) {
-  return attrs.connective.toUpperCase()
+function makeAddLinesCartQuery(cartData) {
+  return {
+    query: createAddLinesCartQuery(cartData),
+    variables: {
+      cartId: cartData.cartId,
+      lines: cartData.lines ? cartData.lines : [],
+      language: cartData.buyerIdentity.language,
+      country: cartData.buyerIdentity.country,
+    },
+  }
 }
 
-function buildQuery(allAttrs) {
-  var query = ""
-  var validFilterParams = filterObj(allAttrs)
+function makeUpdateLinesCartQuery(cartData) {
+  return {
+    query: createUpdateLinesCartQuery(cartData),
+    variables: {
+      cartId: cartData.cartId,
+      lines: cartData.lines ? cartData.lines : [],
+      language: cartData.buyerIdentity.language,
+      country: cartData.buyerIdentity.country,
+      metafields: cartData.metafields ? cartData.metafields : false,
+    },
+  }
+}
 
-  if (isEmpty(validFilterParams)) {
-    return "*" // Returns the default query instead
+function makeRemoveLinesCartQuery(data) {
+  return {
+    query: createRemoveLinesCartQuery(data),
+    variables: {
+      cartId: data.cartId,
+      lineIds: data.lineIds ? data.lineIds : [],
+      language: data.buyerIdentity.language,
+      country: data.buyerIdentity.country,
+    },
+  }
+}
+
+function makeUpdateCartNoteQuery(data) {
+  return {
+    query: createUpdateCartNoteQuery(data),
+    variables: {
+      cartId: data.cartId,
+      note: data.note ? data.note : "",
+      language: data.buyerIdentity.language,
+      country: data.buyerIdentity.country,
+    },
+  }
+}
+
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index
+}
+
+function formatDiscountCodes(data) {
+  const existingDiscountCodes = data.existingDiscountCodes
+    ? data.existingDiscountCodes.filter(onlyUnique)
+    : []
+  const discountToChange = data.discountToChange
+  const isRemoving = data.isRemoving
+
+  if (isRemoving) {
+    var leftOvers = existingDiscountCodes.filter((discount) => {
+      return discount.code !== discountToChange
+    })
+
+    var finalDiscountCodes = leftOvers.map((discount) => {
+      return discount.code
+    })
+  } else {
+    var finalDiscountCodes = existingDiscountCodes.map((discount) => {
+      return discount.code
+    })
+
+    finalDiscountCodes.push(discountToChange)
   }
 
-  var lastKey = getLastKey(validFilterParams)
+  finalDiscountCodes = finalDiscountCodes.filter(onlyUnique)
 
-  for (var key in validFilterParams) {
-    if (isArray(validFilterParams[key])) {
-      query += addNestedQuery(key, validFilterParams[key], allAttrs)
-    } else {
-      query = queryChecks(key, validFilterParams[key], query)
-    }
-
-    if (validFilterParams[key] !== validFilterParams[lastKey]) {
-      query += " " + getConnective(allAttrs) + " "
-    }
-  }
-
-  return query
+  return finalDiscountCodes
 }
 
-export { buildQuery }
+function makeUpdateCartDiscountQuery(data) {
+  let discountCodes = formatDiscountCodes(data)
+
+  return {
+    query: createCartDiscountQuery(data),
+    variables: {
+      cartId: data.cartId,
+      discountCodes: discountCodes,
+      language: data.buyerIdentity.language,
+      country: data.buyerIdentity.country,
+    },
+  }
+}
+
+function makeUpdateCartAttributesQuery(data) {
+  return {
+    query: createUpdateCartAttributesQuery(data),
+    variables: {
+      cartId: data.cartId,
+      attributes: data.attributes ? data.attributes : [],
+      language: data.buyerIdentity.language,
+      country: data.buyerIdentity.country,
+    },
+  }
+}
+
+function makeUpdateBuyerIdentityQuery(data) {
+  var variables = {
+    cartId: data.cartId,
+    buyerIdentity: data.buyerIdentity ? data.buyerIdentity : false,
+    language: data.buyerIdentity.language,
+    country: data.buyerIdentity.country,
+  }
+
+  if (data.buyerIdentity.customerAccessToken) {
+    variables.buyerIdentity = {
+      customerAccessToken: data.buyerIdentity.customerAccessToken,
+    }
+    if (data.buyerIdentity.companyLocationId) {
+      variables.buyerIdentity.companyLocationId =
+        data.buyerIdentity.companyLocationId
+    }
+  }
+  return {
+    query: createUpdateBuyerIdentityQuery(data),
+    variables: variables,
+  }
+}
+
+function makeGetAllTagsQuery(data) {
+  return {
+    query: createGetallTagsQuery(),
+    variables: false,
+  }
+}
+
+function makeGetAllTypesQuery(data) {
+  return {
+    query: createGetallTypesQuery(),
+    variables: false,
+  }
+}
+
+function makeGetAllVendorsQuery(cursor = null) {
+  return {
+    query: createGetallVendorsQuery(),
+    variables: {
+      numProducts: 250,
+      cursor: cursor,
+    },
+  }
+}
+
+function makeGetProductsFromCollectionsQuery(queryParams) {
+  return {
+    query: createGetProductsFromCollectionsQuery(queryParams),
+    variables: queryParams,
+  }
+}
+
+function makeGetCollectionsQuery(data) {
+  return {
+    query: createCollectionsQuery(
+      data.queryParams,
+      data.withProducts,
+      data.customSchema
+    ),
+    variables: data.queryParams,
+  }
+}
+
+export {
+  doGraphQuery,
+  makeProductsQuery,
+  makeGetCartQuery,
+  makeCreateCartQuery,
+  makeAddLinesCartQuery,
+  makeUpdateLinesCartQuery,
+  makeRemoveLinesCartQuery,
+  makeUpdateCartNoteQuery,
+  makeUpdateCartDiscountQuery,
+  makeUpdateCartAttributesQuery,
+  makeUpdateBuyerIdentityQuery,
+  makeGetAllTagsQuery,
+  makeGetAllTypesQuery,
+  makeGetAllVendorsQuery,
+  makeGetProductsFromCollectionsQuery,
+  makeGetCollectionsQuery,
+}

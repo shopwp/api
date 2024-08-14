@@ -48,10 +48,6 @@ function deleteCustomerAddress(data = {}) {
   return post("customers/addressDelete", data)
 }
 
-function createCustomerAccessToken(data = {}) {
-  return post("customers/createAccessToken", data)
-}
-
 export {
   getCustomersCount,
   getCustomers,
@@ -65,5 +61,4 @@ export {
   updateCustomerAddress,
   addCustomerAddress,
   deleteCustomerAddress,
-  createCustomerAccessToken,
 }

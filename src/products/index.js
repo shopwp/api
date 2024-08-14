@@ -1,8 +1,6 @@
 import { maybeHandleApiError } from "../errors"
 import { to } from "@shopwp/common"
-import isEmpty from "lodash-es/isEmpty"
-import isArray from "lodash-es/isArray"
-import { getProducts, getProductsByCollections } from "../internal/products"
+import { getProducts, getProductsByCollections } from "../internal/cart"
 import { getCache, maybeSetCache, clearCache } from "../cache"
 
 function fetchProducts(queryParams, shopState, cursor = false) {
@@ -49,18 +47,8 @@ function fetchProducts(queryParams, shopState, cursor = false) {
       }
     }
 
-    const shopStateCopy = Object.assign({}, shopState)
-
-    if (shopStateCopy) {
-      delete shopStateCopy.cartData
-      delete shopStateCopy.t
-    }
-
     const [resultsError, results] = await to(
-      getProducts({
-        queryParams: queryParams,
-        shopState: shopStateCopy,
-      })
+      getProducts(queryParams, shopState.client)
     )
 
     var maybeApiError = maybeHandleApiError(resultsError, results)
@@ -76,11 +64,29 @@ function fetchProducts(queryParams, shopState, cursor = false) {
     maybeSetCache({
       cacheType: "products",
       dataToHash: queryParams,
-      dataToCache: results.data,
+      dataToCache: results.products,
     })
 
-    resolve(results.data)
+    resolve(results.products)
   })
+}
+
+function makeArrayOfOnlyProducts(apiResults) {
+  var finalProducts = []
+
+  apiResults.collections.edges.forEach((collection) => {
+    if (collection.node.products.edges.length) {
+      finalProducts = finalProducts.concat(collection.node.products.edges)
+    }
+  })
+
+  return {
+    edges: finalProducts,
+    pageInfo: {
+      hasNextPage: false,
+      hasPrevPage: false,
+    },
+  }
 }
 
 function fetchProductsByCollections(queryParams, shopState, cursor = false) {
@@ -129,15 +135,8 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
       }
     }
 
-    let cloneShopState = Object.assign({}, shopState)
-
-    delete cloneShopState.t
-
     const [resultsError, results] = await to(
-      getProductsByCollections({
-        queryParams: queryParams,
-        shopState: cloneShopState,
-      })
+      getProductsByCollections(queryParams, shopState.client)
     )
 
     var maybeApiError = maybeHandleApiError(resultsError, results)
@@ -150,59 +149,16 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
       return
     }
 
-    if (isEmpty(results.data)) {
-      resolve(results.data)
-      return
-    }
+    // let onlyProducts = normalizeProductData(makeArrayOfOnlyProducts(results))
+    let onlyProducts = makeArrayOfOnlyProducts(results)
 
-    if (isArray(results.data)) {
-      var nonFalseyData = results.data.filter((v) => !!v)
-    } else {
-      var nonFalseyData = results.data.nodes.filter((v) => !!v)
-    }
+    maybeSetCache({
+      cacheType: "collectionProducts",
+      dataToHash: queryParams,
+      dataToCache: onlyProducts,
+    })
 
-    if (!isEmpty(nonFalseyData)) {
-      // Server is returning products from more than one collection
-      if (nonFalseyData.length > 1) {
-        let data = {
-          edges: nonFalseyData,
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-        }
-
-        maybeSetCache({
-          cacheType: "collectionProducts",
-          dataToHash: queryParams,
-          dataToCache: data,
-        })
-
-        return resolve(data)
-      }
-
-      if (nonFalseyData[0].hasOwnProperty("products")) {
-        let data = nonFalseyData[0].products
-
-        maybeSetCache({
-          cacheType: "collectionProducts",
-          dataToHash: queryParams,
-          dataToCache: data,
-        })
-
-        resolve(data)
-      } else {
-        resolve(false)
-      }
-    } else {
-      maybeSetCache({
-        cacheType: "collectionProducts",
-        dataToHash: queryParams,
-        dataToCache: nonFalseyData,
-      })
-
-      resolve(nonFalseyData)
-    }
+    return resolve(onlyProducts)
   })
 }
 

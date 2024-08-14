@@ -60,7 +60,7 @@ function removeConnection() {
 }
 
 function removeWebhooks(data) {
-  return post("webhooks/delete/all", data)
+  return post("webhooks/delete", data)
 }
 
 function connectWebhooks(data) {

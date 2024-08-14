@@ -8,13 +8,12 @@ export {
   sanitizeCountries,
 } from "./src/shop"
 
-export { buildQuery } from "./src/api/query"
 export {
-  getAllTags,
-  getAllTypes,
-  getAllVendors,
-  getProducts,
-} from "./src/internal/products"
+  makeProductsQuery,
+  makeGetCartQuery,
+  doGraphQuery,
+} from "./src/api/query"
+
 export { getTemplate } from "./src/internal/components"
 export {
   fetchMaskedConnection,
@@ -23,8 +22,6 @@ export {
 
 export { getPosts } from "./src/internal/posts"
 
-export { getAllCollections } from "./src/internal/collections"
-export { showMetafield, hideMetafield } from "./src/internal/metafields"
 export { getAvailableLocalizations } from "./src/internal/translator"
 export {
   setLicenseLocally,
@@ -34,6 +31,8 @@ export {
   activateLicenseKeyRemote,
   getLicenseKeyStatusRemote,
   getProductInfoRemote,
+  updatePaymentMethod,
+  updateCustomer,
 } from "./src/internal/license"
 
 export {
@@ -47,13 +46,18 @@ export {
 export {
   createCart,
   updateCartAttributes,
-  updateBuyerIdentity,
   getCart,
   addLineItems,
   removeLineItems,
   updateLineItems,
   applyDiscount,
   updateNote,
+  getAllTags,
+  getAllTypes,
+  getAllVendors,
+  getProducts,
+  getProductsByCollections,
+  getCollections,
 } from "./src/internal/cart"
 
 export {
@@ -76,7 +80,12 @@ export {
 
 export { clearCacheTool } from "./src/internal/tools"
 
-export { maybeAlterErrorMessage, maybeHandleApiError } from "./src/errors"
+export {
+  maybeAlterErrorMessage,
+  maybeHandleApiError,
+  getWordPressErrorMessage,
+  isWordPressError,
+} from "./src/errors"
 
 export {
   loginCustomer,
@@ -89,7 +98,6 @@ export {
   updateCustomerAddress,
   addCustomerAddress,
   deleteCustomerAddress,
-  createCustomerAccessToken,
 } from "./src/internal/customers"
 
 export { queryOptionsNoRefetch, queryOptionsWithRefetch } from "./src/queries"

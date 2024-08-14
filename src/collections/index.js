@@ -1,6 +1,6 @@
 import { to } from "@shopwp/common"
 import { maybeHandleApiError } from "../errors"
-import { getCollections } from "../internal/collections"
+import { getCollections } from "../internal/cart"
 import { getCache, maybeSetCache, clearCache } from "../cache"
 
 function fetchCollections(
@@ -49,7 +49,9 @@ function fetchCollections(
       }
     }
 
-    const [resultsError, results] = await to(getCollections(params))
+    const [resultsError, results] = await to(
+      getCollections(params, shopState.client)
+    )
 
     var errMsg = maybeHandleApiError(resultsError, results)
 
@@ -63,10 +65,10 @@ function fetchCollections(
     maybeSetCache({
       cacheType: "collections",
       dataToHash: params,
-      dataToCache: results.data,
+      dataToCache: results.collections,
     })
 
-    resolve(results.data)
+    resolve(results.collections)
   })
 }
 

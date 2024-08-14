@@ -8,13 +8,8 @@ export {
   sanitizeCountries,
 } from "./shop"
 
-export { buildQuery } from "./api/query"
-export {
-  getAllTags,
-  getAllTypes,
-  getAllVendors,
-  getProducts,
-} from "./internal/products"
+export { makeProductsQuery, makeGetCartQuery, doGraphQuery } from "./api/query"
+
 export { getTemplate } from "./internal/components"
 export {
   fetchMaskedConnection,
@@ -23,8 +18,6 @@ export {
 
 export { getPosts } from "./internal/posts"
 
-export { getAllCollections } from "./internal/collections"
-export { showMetafield, hideMetafield } from "./internal/metafields"
 export { getAvailableLocalizations } from "./internal/translator"
 export {
   setLicenseLocally,
@@ -34,6 +27,8 @@ export {
   activateLicenseKeyRemote,
   getLicenseKeyStatusRemote,
   getProductInfoRemote,
+  updatePaymentMethod,
+  updateCustomer,
 } from "./internal/license"
 
 export {
@@ -47,13 +42,18 @@ export {
 export {
   createCart,
   updateCartAttributes,
-  updateBuyerIdentity,
   getCart,
   addLineItems,
   removeLineItems,
   updateLineItems,
   applyDiscount,
   updateNote,
+  getAllTags,
+  getAllTypes,
+  getAllVendors,
+  getProducts,
+  getProductsByCollections,
+  getCollections,
 } from "./internal/cart"
 
 export {
@@ -75,7 +75,12 @@ export {
 
 export { clearCache } from "./internal/tools"
 
-export { maybeAlterErrorMessage, maybeHandleApiError } from "./errors"
+export {
+  maybeAlterErrorMessage,
+  maybeHandleApiError,
+  isWordPressError,
+  getWordPressErrorMessage,
+} from "./errors"
 
 export {
   loginCustomer,
@@ -88,7 +93,6 @@ export {
   updateCustomerAddress,
   addCustomerAddress,
   deleteCustomerAddress,
-  createCustomerAccessToken,
 } from "./internal/customers"
 
 export { queryOptionsNoRefetch, queryOptionsWithRefetch } from "./queries"
