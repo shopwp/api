@@ -738,7 +738,7 @@ function makeGetCartQuery(cartData) {
 
 function makeCreateCartQuery(cartData) {
   var variables = {
-    lines: cartData.lines ? cartData : [],
+    lines: cartData.lines ? cartData.lines : [],
     note: cartData.note ? cartData.note : "",
     attributes: cartData.attributes ? cartData.attributes : [],
     discountCodes: cartData.discountCodes ? cartData.discountCodes : [],
