@@ -80,13 +80,26 @@ function makeArrayOfOnlyProducts(apiResults) {
     }
   })
 
-  return {
+  var returnOb = {
     edges: finalProducts,
-    pageInfo: {
+  }
+
+  if (apiResults.collections.edges.length === 1) {
+    returnOb.pageInfo = {
+      hasNextPage:
+        apiResults.collections.edges[0].node.products.pageInfo.hasNextPage,
+      hasPrevPage: false,
+      cursor: apiResults.collections.edges[0].node.products.pageInfo.endCursor,
+    }
+  } else {
+    returnOb.pageInfo = {
       hasNextPage: false,
       hasPrevPage: false,
-    },
+      cursor: false,
+    }
   }
+
+  return returnOb
 }
 
 function fetchProductsByCollections(queryParams, shopState, cursor = false) {
@@ -149,7 +162,6 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
       return
     }
 
-    // let onlyProducts = normalizeProductData(makeArrayOfOnlyProducts(results))
     let onlyProducts = makeArrayOfOnlyProducts(results)
 
     maybeSetCache({

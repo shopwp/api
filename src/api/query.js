@@ -6,11 +6,13 @@ function doGraphQuery(queryData, client) {
       )
     }
 
+    var finalVars = wp.hooks.applyFilters(
+      "cart.requestSettings",
+      wp.hooks.applyFilters("product.requestSettings", queryData.variables)
+    )
+
     const { data, errors, extensions } = await client.request(queryData.query, {
-      variables: wp.hooks.applyFilters(
-        "cart.requestSettings",
-        wp.hooks.applyFilters("product.requestSettings", queryData.variables)
-      ),
+      variables: finalVars,
     })
 
     if (errors) {
@@ -60,10 +62,19 @@ function makeProductsQuery(queryParams, customSchema = false) {
 }
 
 function productsDefaultSchema(queryParams = false) {
-  if (queryParams && queryParams.metafields) {
-    var metafields = queryParams.metafields
+  if (queryParams.productMetafields && queryParams.productMetafields !== "[]") {
+    var productMetafields = atob(queryParams.productMetafields)
   } else {
-    var metafields = ``
+    var productMetafields = queryParams.productMetafields
+  }
+
+  if (
+    queryParams.productVariantMetafields &&
+    queryParams.productVariantMetafields !== "[]"
+  ) {
+    var productVariantMetafields = atob(queryParams.productVariantMetafields)
+  } else {
+    var productVariantMetafields = queryParams.productVariantMetafields
   }
 
   return `
@@ -88,6 +99,12 @@ function productsDefaultSchema(queryParams = false) {
       id
       name
       values
+    }
+    metafields(identifiers:${productMetafields}) { 
+      type 
+      namespace 
+      key 
+      value
     }
     priceRange {
       maxVariantPrice {
@@ -187,7 +204,12 @@ function productsDefaultSchema(queryParams = false) {
                 originalSrc
                 transformedSrc
             }
-            ${metafields}
+            metafields(identifiers:${productVariantMetafields}) { 
+              type 
+              namespace 
+              key 
+              value
+            }
             price {
                 amount
                 currencyCode
@@ -663,24 +685,32 @@ function createGetallVendorsQuery() {
   return `query ($numProducts: Int!, $cursor: String) {
     products(first: $numProducts, after: $cursor) {
       pageInfo {
-          hasNextPage
-          endCursor
-        }
-        edges {
-            node {
-              vendor
-            }
-        }
+        hasNextPage
+        endCursor
+      }
+      edges {
+          node {
+            vendor
+          }
+      }
     }
   }`
 }
 
 function createGetProductsFromCollectionsQuery(queryParams) {
-  return `query ProductByCollections($query: String, $first: Int!, $sortKey: ProductCollectionSortKeys, $reverse: Boolean, $language: LanguageCode, $country: CountryCode, $buyer: BuyerInput) @inContext(country: $country, language: $language, buyer: $buyer) {
+  return `query ProductByCollections($query: String, $first: Int!, $sortKey: ProductCollectionSortKeys, $reverse: Boolean, $language: LanguageCode, $country: CountryCode, $buyer: BuyerInput, $cursor: String) @inContext(country: $country, language: $language, buyer: $buyer) {
     collections(first: 250, query: $query) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       edges {
         node {
-          products(first: $first, sortKey: $sortKey, reverse: $reverse) {
+          products(first: $first, sortKey: $sortKey, reverse: $reverse, after: $cursor) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
             edges {
               cursor
               node {
