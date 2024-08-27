@@ -148,6 +148,26 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
       }
     }
 
+    if (queryParams.ids) {
+      var collectionProductsQuery = queryParams.ids.reduce(
+        (prev, current, index) => {
+          if (!current || !current.label) {
+            return prev
+          }
+          if (index === 0) {
+            prev = prev + "(title:" + current.label + ")"
+          } else {
+            prev = prev + " OR (title:" + current.label + ")"
+          }
+
+          return prev
+        },
+        ""
+      )
+
+      queryParams.query = collectionProductsQuery
+    }
+
     const [resultsError, results] = await to(
       getProductsByCollections(queryParams, shopState.client)
     )
