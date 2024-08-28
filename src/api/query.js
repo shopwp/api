@@ -77,6 +77,14 @@ function productsDefaultSchema(queryParams = false) {
     var productVariantMetafields = queryParams.productVariantMetafields
   }
 
+  if (!productMetafields) {
+    productMetafields = "[]"
+  }
+
+  if (!productVariantMetafields) {
+    productVariantMetafields = "[]"
+  }
+
   return `
     availableForSale
     compareAtPriceRange {
