@@ -54,6 +54,7 @@ export {
   getProducts,
   getProductsByCollections,
   getCollections,
+  updateBuyerIdentity,
 } from "./internal/cart"
 
 export {

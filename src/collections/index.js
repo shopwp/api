@@ -49,9 +49,7 @@ function fetchCollections(
       }
     }
 
-    const [resultsError, results] = await to(
-      getCollections(params, shopState.client)
-    )
+    const [resultsError, results] = await to(getCollections(params, shopState))
 
     var errMsg = maybeHandleApiError(resultsError, results)
 

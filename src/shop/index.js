@@ -66,7 +66,7 @@ async function getLocalizations(shopState, dispatch) {
 
   const foundSelectedCountry = findCountryByCode(
     countries,
-    shopState.buyerIdentity.country
+    shopState.buyerIdentity.countryCode
   )
 
   if (foundSelectedCountry.length) {
@@ -77,7 +77,7 @@ async function getLocalizations(shopState, dispatch) {
 
     const foundSelectedLanguages =
       foundSelectedCountry[0].value.availableLanguages.filter(
-        (lang) => lang.isoCode === shopState.buyerIdentity.language
+        (lang) => lang.isoCode === shopState.language
       )
 
     if (foundSelectedLanguages.length) {

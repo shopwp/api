@@ -48,7 +48,7 @@ function fetchProducts(queryParams, shopState, cursor = false) {
     }
 
     const [resultsError, results] = await to(
-      getProducts(queryParams, shopState.client)
+      getProducts(queryParams, shopState)
     )
 
     var maybeApiError = maybeHandleApiError(resultsError, results)
@@ -169,7 +169,7 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
     }
 
     const [resultsError, results] = await to(
-      getProductsByCollections(queryParams, shopState.client)
+      getProductsByCollections(queryParams, shopState)
     )
 
     var maybeApiError = maybeHandleApiError(resultsError, results)

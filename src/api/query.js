@@ -23,7 +23,7 @@ function doGraphQuery(queryData, client) {
   })
 }
 
-function makeProductsQuery(queryParams, customSchema = false) {
+function makeProductsQuery(queryParams, shopState, customSchema = false) {
   const schema = customSchema
     ? customSchema
     : productsDefaultSchema(queryParams)
@@ -33,7 +33,7 @@ function makeProductsQuery(queryParams, customSchema = false) {
     first: queryParams.first,
     reverse: queryParams.reverse,
     sortKey: queryParams.sortKey ? queryParams.sortKey : "TITLE",
-    language: queryParams.language,
+    language: shopState.language,
     country: queryParams.country,
     buyer: queryParams.buyer,
   }
@@ -663,6 +663,7 @@ function createUpdateBuyerIdentityQuery(cartData) {
         userErrors {
             field
             message
+            code
         }
       }
   }`
@@ -761,11 +762,11 @@ function createCollectionsQuery(
   }`
 }
 
-function makeGetCartQuery(cartData) {
+function makeGetCartQuery(cartData, shopState) {
   const variables = {
     id: cartData.id,
-    language: cartData.buyerIdentity.language,
-    country: cartData.buyerIdentity.country,
+    language: shopState.language,
+    country: cartData.buyerIdentity.countryCode,
   }
 
   return {
@@ -774,22 +775,28 @@ function makeGetCartQuery(cartData) {
   }
 }
 
-function makeCreateCartQuery(cartData) {
+function makeCreateCartQuery(cartData, shopState) {
   var variables = {
     lines: cartData.lines ? cartData.lines : [],
     note: cartData.note ? cartData.note : "",
     attributes: cartData.attributes ? cartData.attributes : [],
     discountCodes: cartData.discountCodes ? cartData.discountCodes : [],
-    language: cartData.buyerIdentity.language,
-    country: cartData.buyerIdentity.country,
+    language: shopState.language,
+    country: cartData.buyerIdentity.countryCode,
   }
 
-  if (cartData.buyerIdentity.customerAccessToken) {
+  if (
+    cartData.buyerIdentity.customerAccessToken &&
+    cartData.buyerIdentity.customerAccessToken !== ""
+  ) {
     variables.buyerIdentity = {
       customerAccessToken: cartData.buyerIdentity.customerAccessToken,
     }
 
-    if (cartData.buyerIdentity.companyLocationId) {
+    if (
+      cartData.buyerIdentity.companyLocationId &&
+      cartData.buyerIdentity.companyLocationId !== ""
+    ) {
       variables.buyerIdentity.companyLocationId =
         cartData.buyerIdentity.companyLocationId
     }
@@ -801,26 +808,26 @@ function makeCreateCartQuery(cartData) {
   }
 }
 
-function makeAddLinesCartQuery(cartData) {
+function makeAddLinesCartQuery(cartData, shopState) {
   return {
     query: createAddLinesCartQuery(cartData),
     variables: {
       cartId: cartData.cartId,
       lines: cartData.lines ? cartData.lines : [],
-      language: cartData.buyerIdentity.language,
-      country: cartData.buyerIdentity.country,
+      language: shopState.language,
+      country: cartData.buyerIdentity.countryCode,
     },
   }
 }
 
-function makeUpdateLinesCartQuery(cartData) {
+function makeUpdateLinesCartQuery(cartData, shopState) {
   return {
     query: createUpdateLinesCartQuery(cartData),
     variables: {
       cartId: cartData.cartId,
       lines: cartData.lines ? cartData.lines : [],
-      language: cartData.buyerIdentity.language,
-      country: cartData.buyerIdentity.country,
+      language: shopState.language,
+      country: cartData.buyerIdentity.countryCode,
       metafields: cartData.metafields ? cartData.metafields : false,
     },
   }
@@ -833,19 +840,19 @@ function makeRemoveLinesCartQuery(data) {
       cartId: data.cartId,
       lineIds: data.lineIds ? data.lineIds : [],
       language: data.buyerIdentity.language,
-      country: data.buyerIdentity.country,
+      country: data.buyerIdentity.countryCode,
     },
   }
 }
 
-function makeUpdateCartNoteQuery(data) {
+function makeUpdateCartNoteQuery(data, shopState) {
   return {
     query: createUpdateCartNoteQuery(data),
     variables: {
       cartId: data.cartId,
       note: data.note ? data.note : "",
-      language: data.buyerIdentity.language,
-      country: data.buyerIdentity.country,
+      language: shopState.language,
+      country: data.buyerIdentity.countryCode,
     },
   }
 }
@@ -882,7 +889,7 @@ function formatDiscountCodes(data) {
   return finalDiscountCodes
 }
 
-function makeUpdateCartDiscountQuery(data) {
+function makeUpdateCartDiscountQuery(data, shopState) {
   let discountCodes = formatDiscountCodes(data)
 
   return {
@@ -890,45 +897,54 @@ function makeUpdateCartDiscountQuery(data) {
     variables: {
       cartId: data.cartId,
       discountCodes: discountCodes,
-      language: data.buyerIdentity.language,
-      country: data.buyerIdentity.country,
+      language: shopState.language,
+      country: data.buyerIdentity.countryCode,
     },
   }
 }
 
-function makeUpdateCartAttributesQuery(data) {
+function makeUpdateCartAttributesQuery(data, shopState) {
   return {
     query: createUpdateCartAttributesQuery(data),
     variables: {
       cartId: data.cartId,
       attributes: data.attributes ? data.attributes : [],
-      language: data.buyerIdentity.language,
-      country: data.buyerIdentity.country,
+      language: shopState.language,
+      country: data.buyerIdentity.countryCode,
     },
   }
 }
 
-function makeUpdateBuyerIdentityQuery(data) {
+function makeUpdateBuyerIdentityQuery(data, shopState) {
   var variables = {
     cartId: data.cartId,
     buyerIdentity: data.buyerIdentity ? data.buyerIdentity : false,
-    language: data.buyerIdentity.language,
-    country: data.buyerIdentity.country,
+    language: shopState.language,
+    country: data.buyerIdentity.countryCode,
   }
 
-  if (data.buyerIdentity.customerAccessToken) {
+  if (
+    data.buyerIdentity.customerAccessToken &&
+    data.buyerIdentity.customerAccessToken !== ""
+  ) {
     variables.buyerIdentity = {
       customerAccessToken: data.buyerIdentity.customerAccessToken,
     }
-    if (data.buyerIdentity.companyLocationId) {
+    if (
+      data.buyerIdentity.companyLocationId &&
+      data.buyerIdentity.companyLocationId !== ""
+    ) {
       variables.buyerIdentity.companyLocationId =
         data.buyerIdentity.companyLocationId
     }
   }
-  return {
+
+  var toSend = {
     query: createUpdateBuyerIdentityQuery(data),
     variables: variables,
   }
+
+  return toSend
 }
 
 function makeGetAllTagsQuery(data) {

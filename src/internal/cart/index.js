@@ -16,64 +16,83 @@ import {
   makeProductsQuery,
   makeGetProductsFromCollectionsQuery,
   makeGetCollectionsQuery,
+  makeUpdateBuyerIdentityQuery,
 } from "../../api/query"
 
-function getCart(data, client) {
-  return doGraphQuery(makeGetCartQuery(data), client)
+function getCart(data, shopState) {
+  return doGraphQuery(makeGetCartQuery(data, shopState), shopState.client)
 }
 
-function createCart(data, client) {
-  return doGraphQuery(makeCreateCartQuery(data), client)
+function createCart(data, shopState) {
+  return doGraphQuery(makeCreateCartQuery(data, shopState), shopState.client)
 }
 
-function addLineItems(data, client) {
-  return doGraphQuery(makeAddLinesCartQuery(data), client)
+function addLineItems(data, shopState) {
+  return doGraphQuery(makeAddLinesCartQuery(data, shopState), shopState.client)
 }
 
-function updateLineItems(data, client) {
-  return doGraphQuery(makeUpdateLinesCartQuery(data), client)
+function updateLineItems(data, shopState) {
+  return doGraphQuery(
+    makeUpdateLinesCartQuery(data, shopState),
+    shopState.client
+  )
 }
 
-function removeLineItems(data, client) {
-  return doGraphQuery(makeRemoveLinesCartQuery(data), client)
+function removeLineItems(data, shopState) {
+  return doGraphQuery(
+    makeRemoveLinesCartQuery(data, shopState),
+    shopState.client
+  )
 }
 
-function updateNote(data, client) {
-  return doGraphQuery(makeUpdateCartNoteQuery(data), client)
+function updateNote(data, shopState) {
+  return doGraphQuery(
+    makeUpdateCartNoteQuery(data, shopState),
+    shopState.client
+  )
 }
 
-function applyDiscount(data, client) {
-  return doGraphQuery(makeUpdateCartDiscountQuery(data), client)
+function applyDiscount(data, shopState) {
+  return doGraphQuery(
+    makeUpdateCartDiscountQuery(data, shopState),
+    shopState.client
+  )
 }
 
-function updateCartAttributes(data, client) {
-  return doGraphQuery(makeUpdateCartAttributesQuery(data), client)
+function updateCartAttributes(data, shopState) {
+  return doGraphQuery(
+    makeUpdateCartAttributesQuery(data, shopState),
+    shopState.client
+  )
 }
 
-function updateBuyerIdentity(data, client) {
-  return doGraphQuery(makeUpdateBuyerIdentityQuery(data), client)
+function updateBuyerIdentity(data, shopState) {
+  return doGraphQuery(
+    makeUpdateBuyerIdentityQuery(data, shopState),
+    shopState.client
+  )
 }
 
-function getAllTags(client) {
-  return doGraphQuery(makeGetAllTagsQuery(), client)
+function getAllTags(shopState) {
+  return doGraphQuery(makeGetAllTagsQuery(), shopState.client)
 }
 
-function getAllTypes(client) {
-  return doGraphQuery(makeGetAllTypesQuery(), client)
+function getAllTypes(shopState) {
+  return doGraphQuery(makeGetAllTypesQuery(), shopState.client)
 }
 
-function getProducts(data, client) {
-  return doGraphQuery(makeProductsQuery(data), client)
+function getProducts(data, shopState) {
+  return doGraphQuery(makeProductsQuery(data, shopState), shopState.client)
 }
 
-function getProductsByCollections(data, client) {
+function getProductsByCollections(data, shopState) {
   var stuff = makeGetProductsFromCollectionsQuery(data)
 
-  return doGraphQuery(stuff, client)
+  return doGraphQuery(stuff, shopState.client)
 }
 
-function getCollections(data, client) {
-  return doGraphQuery(makeGetCollectionsQuery(data), client)
+function getCollections(data, shopState) {
+  return doGraphQuery(makeGetCollectionsQuery(data), shopState.client)
 }
 
 async function getEverything(options) {

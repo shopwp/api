@@ -58,6 +58,7 @@ export {
   getProducts,
   getProductsByCollections,
   getCollections,
+  updateBuyerIdentity,
 } from "./src/internal/cart"
 
 export {
