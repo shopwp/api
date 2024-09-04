@@ -119,10 +119,10 @@ async function getEverything(options) {
   }
 }
 
-async function getAllVendors(client) {
+async function getAllVendors(shopState) {
   const [err, data] = await to(
     getEverything({
-      client: client,
+      client: shopState.client,
       results: [],
       cursor: null,
       queryFn: makeGetAllVendorsQuery,
