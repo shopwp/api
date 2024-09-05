@@ -102,6 +102,21 @@ function makeArrayOfOnlyProducts(apiResults) {
   return returnOb
 }
 
+function createTitleQueryFromValues(values) {
+  return values.reduce((prev, current, index) => {
+    if (!current || !current.label) {
+      return prev + "(title:" + current + ")"
+    }
+    if (index === 0) {
+      prev = prev + "(title:" + current.label + ")"
+    } else {
+      prev = prev + " OR (title:" + current.label + ")"
+    }
+
+    return prev
+  }, "")
+}
+
 function fetchProductsByCollections(queryParams, shopState, cursor = false) {
   return new Promise(async (resolve, reject) => {
     if (!queryParams) {
@@ -149,21 +164,19 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
     }
 
     if (queryParams.ids) {
-      var collectionProductsQuery = queryParams.ids.reduce(
-        (prev, current, index) => {
-          if (!current || !current.label) {
-            return prev
-          }
-          if (index === 0) {
-            prev = prev + "(title:" + current.label + ")"
-          } else {
-            prev = prev + " OR (title:" + current.label + ")"
-          }
+      var collectionProductsQuery = createTitleQueryFromValues(queryParams.ids)
 
-          return prev
-        },
-        ""
-      )
+      queryParams.query = collectionProductsQuery
+    } else if (queryParams.collection_titles) {
+      if (
+        typeof queryParams.collection_titles === "string" ||
+        queryParams.collection_titles instanceof String
+      ) {
+        var titles = [queryParams.collection_titles]
+      } else if (Array.isArray(queryParams.collection_titles)) {
+        var titles = queryParams.collection_titles
+      }
+      var collectionProductsQuery = createTitleQueryFromValues(titles)
 
       queryParams.query = collectionProductsQuery
     }
