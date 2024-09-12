@@ -20,6 +20,10 @@ function updateCustomer(customerInput) {
   return post("account/customerUpdate", customerInput)
 }
 
+function deactivateLicenseKeyNew(data) {
+  return post("license/deactivate", data)
+}
+
 function getProductInfoRemote(key, downloadName) {
   return licenseRemote(key, downloadName, "get_version")
 }
@@ -71,4 +75,5 @@ export {
   getProductInfoRemote,
   updatePaymentMethod,
   updateCustomer,
+  deactivateLicenseKeyNew,
 }

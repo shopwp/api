@@ -18,9 +18,12 @@ export {
 
 export { getPosts } from "./internal/posts"
 
+export { post } from "./internal/request"
+
 export { getAvailableLocalizations } from "./internal/translator"
 export {
   setLicenseLocally,
+  deactivateLicenseKeyNew,
   deleteLicenseLocally,
   getActiveDownloadsLocally,
   deactivateLicenseKeyRemote,

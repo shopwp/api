@@ -21,10 +21,12 @@ export {
 } from "./src/internal/connection"
 
 export { getPosts } from "./src/internal/posts"
+export { post } from "./src/internal/request"
 
 export { getAvailableLocalizations } from "./src/internal/translator"
 export {
   setLicenseLocally,
+  deactivateLicenseKeyNew,
   deleteLicenseLocally,
   getActiveDownloadsLocally,
   deactivateLicenseKeyRemote,
