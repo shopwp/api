@@ -186,6 +186,7 @@ function productsDefaultSchema(queryParams = false) {
       edges {
           node {
             product {
+                id
                 title
                 productType
                 vendor

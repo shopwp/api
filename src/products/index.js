@@ -105,12 +105,12 @@ function makeArrayOfOnlyProducts(apiResults) {
 function createTitleQueryFromValues(values) {
   return values.reduce((prev, current, index) => {
     if (!current || !current.label) {
-      return prev + "(title:" + current + ")"
+      return prev + `(title:"${current}")`
     }
     if (index === 0) {
-      prev = prev + "(title:" + current.label + ")"
+      prev = prev + `(title:"${current.label}")`
     } else {
-      prev = prev + " OR (title:" + current.label + ")"
+      prev = prev + ` OR (title:"${current.label}")`
     }
 
     return prev
