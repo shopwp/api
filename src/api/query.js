@@ -656,7 +656,7 @@ Used for updating existing carts, after a user logs in
 
 */
 function createUpdateBuyerIdentityQuery(cartData) {
-  return `mutation cartBuyerIdentityUpdate($buyerIdentity: CartBuyerIdentityInput!, $cartId: ID!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+  return `mutation cartBuyerIdentityUpdate($buyerIdentity: CartBuyerIdentityInput!, $cartId: ID!) {
       cartBuyerIdentityUpdate(buyerIdentity: $buyerIdentity, cartId: $cartId) {
         cart {
             ${cartSchema(cartData)}
@@ -716,6 +716,7 @@ function createGetProductsFromCollectionsQuery(queryParams) {
       }
       edges {
         node {
+          title
           products(first: $first, sortKey: $sortKey, reverse: $reverse, after: $cursor) {
             pageInfo {
               hasNextPage
@@ -767,13 +768,43 @@ function makeGetCartQuery(cartData, shopState) {
   const variables = {
     id: cartData.id,
     language: shopState.language,
-    country: cartData.buyerIdentity.countryCode,
+    country: cartData.buyerIdentity.country,
   }
 
   return {
     query: getCartQuery(cartData),
     variables: variables,
   }
+}
+
+// Buyer Identity should only ever follow this schema: https://shopify.dev/docs/api/storefront/2025-01/input-objects/CartBuyerIdentityInput
+function sanitizeBuyerIdentity(buyerIdentityFromSomewhere) {
+  // Rename `country` to `countryCode` and exclude `language` and `currency`
+  const { country, language, currency, ...rest } =
+    buyerIdentityFromSomewhere || {}
+  const normalizedBuyerIdentity = {
+    ...rest,
+    ...(country ? { countryCode: country } : {}),
+  }
+
+  const mergedIdentity = {
+    companyLocationId: false,
+    countryCode: false,
+    customerAccessToken: false,
+    deliveryAddressPreferences: false,
+    email: false,
+    phone: false,
+    preferences: false,
+    ...normalizedBuyerIdentity,
+  }
+
+  // Remove falsey values
+  const filteredObject = Object.fromEntries(
+    Object.entries(mergedIdentity).filter(([key, value]) => Boolean(value))
+  )
+
+  // Return false if the final object is empty, otherwise return the filtered object
+  return Object.keys(filteredObject).length === 0 ? false : filteredObject
 }
 
 function makeCreateCartQuery(cartData, shopState) {
@@ -783,24 +814,8 @@ function makeCreateCartQuery(cartData, shopState) {
     attributes: cartData.attributes ? cartData.attributes : [],
     discountCodes: cartData.discountCodes ? cartData.discountCodes : [],
     language: shopState.language,
-    country: cartData.buyerIdentity.countryCode,
-  }
-
-  if (
-    cartData.buyerIdentity.customerAccessToken &&
-    cartData.buyerIdentity.customerAccessToken !== ""
-  ) {
-    variables.buyerIdentity = {
-      customerAccessToken: cartData.buyerIdentity.customerAccessToken,
-    }
-
-    if (
-      cartData.buyerIdentity.companyLocationId &&
-      cartData.buyerIdentity.companyLocationId !== ""
-    ) {
-      variables.buyerIdentity.companyLocationId =
-        cartData.buyerIdentity.companyLocationId
-    }
+    country: cartData.buyerIdentity.country,
+    buyerIdentity: sanitizeBuyerIdentity(cartData.buyerIdentity),
   }
 
   return {
@@ -816,7 +831,7 @@ function makeAddLinesCartQuery(cartData, shopState) {
       cartId: cartData.cartId,
       lines: cartData.lines ? cartData.lines : [],
       language: shopState.language,
-      country: cartData.buyerIdentity.countryCode,
+      country: cartData.buyerIdentity.country,
     },
   }
 }
@@ -828,7 +843,7 @@ function makeUpdateLinesCartQuery(cartData, shopState) {
       cartId: cartData.cartId,
       lines: cartData.lines ? cartData.lines : [],
       language: shopState.language,
-      country: cartData.buyerIdentity.countryCode,
+      country: cartData.buyerIdentity.country,
       metafields: cartData.metafields ? cartData.metafields : false,
     },
   }
@@ -841,7 +856,7 @@ function makeRemoveLinesCartQuery(data) {
       cartId: data.cartId,
       lineIds: data.lineIds ? data.lineIds : [],
       language: data.buyerIdentity.language,
-      country: data.buyerIdentity.countryCode,
+      country: data.buyerIdentity.country,
     },
   }
 }
@@ -853,7 +868,7 @@ function makeUpdateCartNoteQuery(data, shopState) {
       cartId: data.cartId,
       note: data.note ? data.note : "",
       language: shopState.language,
-      country: data.buyerIdentity.countryCode,
+      country: data.buyerIdentity.country,
     },
   }
 }
@@ -899,7 +914,7 @@ function makeUpdateCartDiscountQuery(data, shopState) {
       cartId: data.cartId,
       discountCodes: discountCodes,
       language: shopState.language,
-      country: data.buyerIdentity.countryCode,
+      country: data.buyerIdentity.country,
     },
   }
 }
@@ -911,41 +926,19 @@ function makeUpdateCartAttributesQuery(data, shopState) {
       cartId: data.cartId,
       attributes: data.attributes ? data.attributes : [],
       language: shopState.language,
-      country: data.buyerIdentity.countryCode,
+      country: data.buyerIdentity.country,
     },
   }
 }
 
 function makeUpdateBuyerIdentityQuery(data, shopState) {
-  var variables = {
-    cartId: data.cartId,
-    buyerIdentity: data.buyerIdentity ? data.buyerIdentity : false,
-    language: shopState.language,
-    country: data.buyerIdentity.countryCode,
-  }
-
-  if (
-    data.buyerIdentity.customerAccessToken &&
-    data.buyerIdentity.customerAccessToken !== ""
-  ) {
-    variables.buyerIdentity = {
-      customerAccessToken: data.buyerIdentity.customerAccessToken,
-    }
-    if (
-      data.buyerIdentity.companyLocationId &&
-      data.buyerIdentity.companyLocationId !== ""
-    ) {
-      variables.buyerIdentity.companyLocationId =
-        data.buyerIdentity.companyLocationId
-    }
-  }
-
-  var toSend = {
+  return {
     query: createUpdateBuyerIdentityQuery(data),
-    variables: variables,
+    variables: {
+      cartId: data.cartId,
+      buyerIdentity: sanitizeBuyerIdentity(data.buyerIdentity),
+    },
   }
-
-  return toSend
 }
 
 function makeGetAllTagsQuery(data) {

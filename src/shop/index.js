@@ -1,7 +1,6 @@
-import { to } from "@shopwp/common"
 import { maybeHandleApiError } from "../errors"
 import { getAvailableLocalizations } from "../internal/translator"
-import { sanitizeLanguages } from "@shopwp/common"
+import { to, sanitizeLanguages } from "@shopwp/common"
 
 function sanitizeCountries(countries) {
   if (!countries) {
@@ -37,7 +36,46 @@ function findCountryByCode(countries, code = shopwp.general.countryCode) {
   return countries.filter((country) => country.value.isoCode === code)
 }
 
-async function getLocalizations(shopState, dispatch) {
+function get_lang() {
+  if (shopwp.misc.siteLang === shopwp.general.languageCode) {
+    return shopwp.general.languageCode
+  } else {
+    return shopwp.misc.siteLang
+  }
+}
+
+function findSavedBuyerIdentity(sessionValue) {
+  // We don't want to use the "users" saved value in the admin area
+  if (!sessionValue || shopwp.misc.isAdmin) {
+    let defaults = {
+      language: get_lang(),
+      country: shopwp.general.countryCode,
+      currency: shopwp.general.currencyCode,
+    }
+
+    return defaults
+  }
+
+  sessionValue = JSON.parse(sessionValue)
+
+  var finalStuff = {
+    language: sessionValue?.language ? sessionValue.language : get_lang(),
+    country: sessionValue?.country
+      ? sessionValue.country
+      : shopwp.general.countryCode,
+    currency: sessionValue?.currency
+      ? sessionValue.currency
+      : shopwp.general.currencyCode,
+  }
+
+  return finalStuff
+}
+
+async function getLocalizations(dispatch) {
+  const buyerIdentity = findSavedBuyerIdentity(
+    sessionStorage.getItem("shopwp-buyer-identity")
+  )
+
   dispatch({
     type: "SET_IS_LOADING",
     payload: true,
@@ -66,7 +104,7 @@ async function getLocalizations(shopState, dispatch) {
 
   const foundSelectedCountry = findCountryByCode(
     countries,
-    shopState.buyerIdentity.countryCode
+    buyerIdentity.country
   )
 
   if (foundSelectedCountry.length) {
@@ -76,9 +114,9 @@ async function getLocalizations(shopState, dispatch) {
     })
 
     const foundSelectedLanguages =
-      foundSelectedCountry[0].value.availableLanguages.filter(
-        (lang) => lang.isoCode === shopState.language
-      )
+      foundSelectedCountry[0].value.availableLanguages.filter((lang) => {
+        return lang.isoCode === buyerIdentity.language
+      })
 
     if (foundSelectedLanguages.length) {
       var sanitizedLanguages = sanitizeLanguages(foundSelectedLanguages)

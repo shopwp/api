@@ -67,10 +67,12 @@ function updateCartAttributes(data, shopState) {
 }
 
 function updateBuyerIdentity(data, shopState) {
-  return doGraphQuery(
-    makeUpdateBuyerIdentityQuery(data, shopState),
-    shopState.client
+  var updateBuyerIdentityVariables = makeUpdateBuyerIdentityQuery(
+    data,
+    shopState
   )
+
+  return doGraphQuery(updateBuyerIdentityVariables, shopState.client)
 }
 
 function getAllTags(shopState) {

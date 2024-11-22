@@ -71,12 +71,27 @@ function fetchProducts(queryParams, shopState, cursor = false) {
   })
 }
 
-function makeArrayOfOnlyProducts(apiResults) {
+function makeArrayOfOnlyProducts(apiResults, queryParams) {
   var finalProducts = []
 
   apiResults.collections.edges.forEach((collection) => {
-    if (collection.node.products.edges.length) {
-      finalProducts = finalProducts.concat(collection.node.products.edges)
+    /*
+  
+    TODO: This check will make sure to only return products that belong to the specific collection.
+    By default, Shopify will check if the term is found anywhere in the field for all tokenized fields (which title is one of them).
+
+    Since we're filtering the returned results after making the query, we should think about a better way to do this as this could have
+    negative implications on pagination and filtering.
+    
+    */
+    if (
+      queryParams.query
+        .toLowerCase()
+        .includes(collection.node.title.toLowerCase())
+    ) {
+      if (collection.node.products.edges.length) {
+        finalProducts = finalProducts.concat(collection.node.products.edges)
+      }
     }
   })
 
@@ -195,7 +210,7 @@ function fetchProductsByCollections(queryParams, shopState, cursor = false) {
       return
     }
 
-    let onlyProducts = makeArrayOfOnlyProducts(results)
+    let onlyProducts = makeArrayOfOnlyProducts(results, queryParams)
 
     maybeSetCache({
       cacheType: "collectionProducts",
