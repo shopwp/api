@@ -1,5 +1,5 @@
 export { fetchProducts, fetchProductsByCollections } from "./src/products"
-export { fetchCollections } from "./src/collections"
+export { fetchCollections, fetchCollection } from "./src/collections"
 
 export {
   getLocalizations,

@@ -62,19 +62,24 @@ function makeProductsQuery(queryParams, shopState, customSchema = false) {
 }
 
 function productsDefaultSchema(queryParams = false) {
-  if (queryParams.productMetafields && queryParams.productMetafields !== "[]") {
-    var productMetafields = atob(queryParams.productMetafields)
-  } else {
-    var productMetafields = queryParams.productMetafields
-  }
+  if (queryParams) {
+    if (
+      queryParams.productMetafields &&
+      queryParams.productMetafields !== "[]"
+    ) {
+      var productMetafields = atob(queryParams.productMetafields)
+    } else {
+      var productMetafields = queryParams.productMetafields
+    }
 
-  if (
-    queryParams.productVariantMetafields &&
-    queryParams.productVariantMetafields !== "[]"
-  ) {
-    var productVariantMetafields = atob(queryParams.productVariantMetafields)
-  } else {
-    var productVariantMetafields = queryParams.productVariantMetafields
+    if (
+      queryParams.productVariantMetafields &&
+      queryParams.productVariantMetafields !== "[]"
+    ) {
+      var productVariantMetafields = atob(queryParams.productVariantMetafields)
+    } else {
+      var productVariantMetafields = queryParams.productVariantMetafields
+    }
   }
 
   if (!productMetafields) {
@@ -329,6 +334,36 @@ function productsDefaultSchema(queryParams = false) {
           }
       }
     }`
+}
+
+function collectionSchema(data) {
+  var prodDefaultSchema = productsDefaultSchema()
+
+  var products = data.withProducts
+    ? "products(first: " +
+      data.queryParams.first +
+      " sortKey: " +
+      data.queryParams.sortKey +
+      ") { pageInfo { hasNextPage hasPreviousPage } edges { cursor node { " +
+      prodDefaultSchema +
+      " } } }"
+    : ""
+
+  return `title
+    handle
+    id
+    description
+    descriptionHtml
+    onlineStoreUrl
+    image {
+      width
+      height
+      altText
+      id
+      originalSrc
+      transformedSrc
+    }
+    ${products}`
 }
 
 function collectionsSchema(queryParams, withProducts) {
@@ -735,6 +770,16 @@ function createGetProductsFromCollectionsQuery(queryParams) {
   }`
 }
 
+function createCollectionQuery(data) {
+  var schema = collectionSchema(data.withProducts)
+
+  return `query getCollectionById($id: ID!) {
+    collection(id: $id) {
+      ${schema}
+    }
+  }`
+}
+
 function createCollectionsQuery(
   queryParams,
   withProducts = false,
@@ -746,6 +791,16 @@ function createCollectionsQuery(
 
   if (!queryParams.cursor) {
     delete queryParams.cursor
+  }
+
+  if (queryParams.ids && queryParams.ids.length) {
+    return `query getCollectionsById($ids: [ID!]!, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
+      nodes(ids: $ids) {
+        ... on Collection {
+         ${schema}
+        }
+      }
+    }`
   }
 
   return `query($query: String!, $first: Int!, $cursor: String, $sortKey: CollectionSortKeys, $reverse: Boolean, $language: LanguageCode, $country: CountryCode) @inContext(country: $country, language: $language) {
@@ -983,6 +1038,15 @@ function makeGetCollectionsQuery(data) {
   }
 }
 
+function makeGetCollectionQuery(data) {
+  return {
+    query: createCollectionQuery(data),
+    variables: {
+      id: "gid://shopify/Collection/" + data.queryParams.id,
+    },
+  }
+}
+
 export {
   doGraphQuery,
   makeProductsQuery,
@@ -1000,4 +1064,5 @@ export {
   makeGetAllVendorsQuery,
   makeGetProductsFromCollectionsQuery,
   makeGetCollectionsQuery,
+  makeGetCollectionQuery,
 }

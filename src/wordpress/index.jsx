@@ -15,6 +15,7 @@ async function fetchPostById(postId, postType) {
   })
 }
 
+// This forces the useEffect on entityRecordEdits to run. Look in: src/_controls/wrapper.jsx
 function editPost(data) {
   const { editPost } = wp.data.dispatch("core/editor")
   editPost(data)

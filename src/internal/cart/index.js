@@ -16,6 +16,7 @@ import {
   makeProductsQuery,
   makeGetProductsFromCollectionsQuery,
   makeGetCollectionsQuery,
+  makeGetCollectionQuery,
   makeUpdateBuyerIdentityQuery,
 } from "../../api/query"
 
@@ -97,6 +98,10 @@ function getCollections(data, shopState) {
   return doGraphQuery(makeGetCollectionsQuery(data), shopState.client)
 }
 
+function getCollection(data, shopState) {
+  return doGraphQuery(makeGetCollectionQuery(data), shopState.client)
+}
+
 async function getEverything(options) {
   const [err, data] = await to(
     doGraphQuery(options.queryFn(options.cursor), options.client)
@@ -158,4 +163,5 @@ export {
   getProducts,
   getProductsByCollections,
   getCollections,
+  getCollection,
 }
